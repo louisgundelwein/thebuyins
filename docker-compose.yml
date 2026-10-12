@@ -1,0 +1,12 @@
+# Local dev database only.
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: homegame
+      POSTGRES_PASSWORD: homegame
+      POSTGRES_DB: homegame
+    ports: ["5447:5432"]
+    volumes: [pgdata:/var/lib/postgresql]
+volumes:
+  pgdata:
