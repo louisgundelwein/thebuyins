@@ -1,14 +1,15 @@
 {
   "expo": {
-    "name": "Homegame",
-    "slug": "homegame",
+    "name": "The Buy-Ins",
+    "slug": "thebuyins",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "homegame",
+    "scheme": "thebuyins",
     "userInterfaceStyle": "dark",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.thebuyins.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.homegame"
+      "package": "com.thebuyins.app"
     },
     "web": {
       "output": "static",

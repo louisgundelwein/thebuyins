@@ -1,4 +1,4 @@
-import { settle, summarize, type Entry } from "@homegame/core";
+import { settle, summarize, type Entry } from "@thebuyins/core";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { buyIn, game, member, seat } from "./db/schema/poker";
@@ -9,11 +9,19 @@ export async function loadGame(gameId: string) {
   if (!g) return null;
 
   const seats = await db
-    .select({ id: seat.id, gameId: seat.gameId, memberId: seat.memberId, cashOutCents: seat.cashOutCents, name: member.displayName })
+    .select({
+      id: seat.id,
+      gameId: seat.gameId,
+      memberId: seat.memberId,
+      position: seat.position,
+      cashOutCents: seat.cashOutCents,
+      name: member.displayName,
+      userId: member.userId,
+    })
     .from(seat)
     .innerJoin(member, eq(member.id, seat.memberId))
     .where(eq(seat.gameId, gameId))
-    .orderBy(member.displayName);
+    .orderBy(seat.position);
   const buyIns = seats.length
     ? await db
         .select()
@@ -29,23 +37,29 @@ export async function loadGame(gameId: string) {
   return { game: g, seats, buyIns, summary, transfers };
 }
 
-/** Per-member results over all finished games of a group, optionally limited to one year. */
-export async function leaderboard(groupId: string, year?: number) {
+/** Results of every finished game in a group, oldest first. Basis for standings and history. */
+export async function finishedResults(groupId: string) {
   const games = await db
-    .select({ id: game.id, startedAt: game.startedAt })
+    .select({ id: game.id, title: game.title, startedAt: game.startedAt })
     .from(game)
-    .where(and(eq(game.groupId, groupId), eq(game.status, "finished")));
-  const inScope = games.filter((g) => !year || g.startedAt.getFullYear() === year);
-  if (!inScope.length) return [];
+    .where(and(eq(game.groupId, groupId), eq(game.status, "finished")))
+    .orderBy(game.startedAt);
+  if (!games.length) return [];
 
-  const seats = await db.select().from(seat).where(inArray(seat.gameId, inScope.map((g) => g.id)));
+  const seats = await db.select().from(seat).where(inArray(seat.gameId, games.map((g) => g.id)));
   const buyIns = await db.select().from(buyIn).where(inArray(buyIn.seatId, seats.map((s) => s.id)));
 
+  return games.map((g) => ({ ...g, players: summarize(entriesOf(seats.filter((s) => s.gameId === g.id), buyIns)).players }));
+}
+
+type Results = Awaited<ReturnType<typeof finishedResults>>;
+
+/** Per-member totals, optionally limited to one year. */
+export function leaderboard(results: Results, year?: number) {
   const byMember = new Map<string, { games: number; wins: number; netCents: number; bestCents: number }>();
-  for (const g of inScope) {
-    const gameSeats = seats.filter((s) => s.gameId === g.id);
-    const { players } = summarize(entriesOf(gameSeats, buyIns));
-    for (const p of players) {
+  for (const g of results) {
+    if (year && g.startedAt.getFullYear() !== year) continue;
+    for (const p of g.players) {
       const row = byMember.get(p.playerId) ?? { games: 0, wins: 0, netCents: 0, bestCents: 0 };
       row.games++;
       row.netCents += p.netCents;
@@ -54,10 +68,20 @@ export async function leaderboard(groupId: string, year?: number) {
       byMember.set(p.playerId, row);
     }
   }
-
   return [...byMember]
     .map(([memberId, row]) => ({ memberId, ...row }))
     .sort((a, b) => b.netCents - a.netCents);
+}
+
+/** One member's result per game they played, oldest first, with rank (1 = biggest winner). */
+export function historyOf(results: Results, memberId: string) {
+  return results.flatMap((g) => {
+    const rank = g.players.findIndex((p) => p.playerId === memberId);
+    const me = g.players[rank];
+    return me
+      ? [{ gameId: g.id, title: g.title, startedAt: g.startedAt, players: g.players.length, rank: rank + 1, buyInCents: me.buyInCents, netCents: me.netCents }]
+      : [];
+  });
 }
 
 /** Seats are keyed by member id so results can be aggregated across games. */
