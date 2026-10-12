@@ -24,6 +24,9 @@ export default function RootLayout() {
           </Stack.Protected>
           {/* Unguarded so invite links work signed in or out. Declared last so it never becomes the fallback route. */}
           <Stack.Screen name="join" />
+          {/* Public pages linked from the store listings. */}
+          <Stack.Screen name="privacy" />
+          <Stack.Screen name="support" />
         </Stack>
       </ThemeProvider>
     </QueryClientProvider>
