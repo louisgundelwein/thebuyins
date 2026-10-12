@@ -12,6 +12,10 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   database: drizzleAdapter(db, { provider: "pg", schema }),
   emailAndPassword: { enabled: true },
+  // Both stores require in-app account deletion. Guest rows keep the history (member.userId is set null).
+  user: { deleteUser: { enabled: true } },
+  // Behind Dokploy's Traefik the client IP arrives in X-Forwarded-For (used for rate limiting).
+  advanced: { ipAddress: { ipAddressHeaders: ["x-forwarded-for"] } },
   plugins: [expo()],
   trustedOrigins: [
     "thebuyins://",
