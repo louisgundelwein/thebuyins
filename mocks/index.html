@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Home Poker Mocks</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0b0d; color: #fff;
+    font: 14px/1.4 -apple-system, "Inter", "Segoe UI", system-ui, sans-serif;
+    padding: 40px 32px 80px;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+  h1 { font-size: 22px; font-weight: 650; margin-bottom: 6px; }
+  .lead { color: #9aa0a6; margin-bottom: 36px; }
+  section.dir { margin-bottom: 64px; }
+  .dir-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+  .dir-head h2 { font-size: 18px; font-weight: 650; }
+  .dir-head span { color: #9aa0a6; }
+  .row { display: flex; gap: 28px; flex-wrap: wrap; }
+  .cap { color: #9aa0a6; font-size: 12px; margin-top: 10px; text-align: center; }
+
+  .phone {
+    width: 360px; height: 760px; border-radius: 44px; overflow: hidden;
+    position: relative; border: 1px solid #ffffff14;
+    background: var(--bg); box-shadow: 0 30px 80px #0008;
+  }
+  .status { display: flex; justify-content: space-between; padding: 14px 26px 6px; font-size: 13px; font-weight: 600; }
+  .scroll { padding: 8px 18px 100px; height: 100%; overflow: hidden; }
+  .tabbar {
+    position: absolute; left: 12px; right: 12px; bottom: 14px; height: 62px;
+    border-radius: 24px; display: flex; justify-content: space-around; align-items: center;
+    background: var(--glass); backdrop-filter: blur(20px); border: 1px solid #ffffff12;
+    font-size: 11px; color: #ffffff80;
+  }
+  .tabbar div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .tabbar i { width: 22px; height: 22px; border-radius: 7px; background: #ffffff22; display: block; }
+  .tabbar .on { color: #fff; }
+  .tabbar .on i { background: var(--accent); }
+
+  .muted { color: #ffffff8c; }
+  .pos { color: var(--pos); } .neg { color: var(--neg); }
+  .btn {
+    display: flex; align-items: center; justify-content: center; height: 48px; border-radius: 16px;
+    background: var(--accent); color: var(--on-accent); font-weight: 650; font-size: 15px;
+  }
+  .btn.ghost { background: #ffffff10; color: #fff; }
+  .av {
+    width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+  }
+
+  /* ---------- A: Felt (quiet glass, green accent) ---------- */
+  .A { --bg: radial-gradient(120% 60% at 50% 0%, #0f2a22 0%, #0b0f0e 55%); --glass: #ffffff0d;
+       --accent: #3ddc97; --on-accent: #04140d; --pos: #3ddc97; --neg: #ff6b6b; }
+  .A .panel { background: #ffffff0b; border: 1px solid #ffffff10; border-radius: 22px; padding: 14px; backdrop-filter: blur(18px); margin-bottom: 12px; }
+  .A .title { font-size: 26px; font-weight: 700; margin: 6px 0 2px; }
+  .A .li { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
+  .A .li + .li { border-top: 1px solid #ffffff0a; }
+  .A .li .grow { flex: 1; }
+  .A .big { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
+  .A .chip { display: inline-flex; padding: 4px 10px; border-radius: 99px; background: #ffffff12; font-size: 12px; }
+  .A .chip.live { background: #3ddc9726; color: #3ddc97; }
+  .A .seg { display: flex; background: #ffffff0d; border-radius: 12px; padding: 3px; font-size: 12px; margin-bottom: 12px; }
+  .A .seg div { flex: 1; text-align: center; padding: 6px; border-radius: 9px; color: #ffffff99; }
+  .A .seg .on { background: #ffffff1c; color: #fff; }
+  .A .plus { width: 34px; height: 34px; border-radius: 12px; background: #3ddc9722; color: #3ddc97; display: grid; place-items: center; font-weight: 700; }
+  .A .arrow { color: #ffffff55; font-size: 13px; }
+
+  /* ---------- B: Ledger (dense, amber, table first) ---------- */
+  .B { --bg: #0d0d0f; --glass: #1a1a1dcc; --accent: #f5b544; --on-accent: #1a1203; --pos: #7ee2a8; --neg: #ff7a7a; }
+  .B .hdr { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 14px; }
+  .B .hdr b { font-size: 17px; }
+  .B .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .B .kpi { background: #17171a; border-radius: 14px; padding: 10px; }
+  .B .kpi small { display: block; color: #ffffff80; font-size: 11px; }
+  .B .kpi b { font-size: 17px; }
+  .B table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .B th { text-align: right; font-weight: 500; color: #ffffff70; font-size: 11px; padding: 0 4px 6px; }
+  .B th:first-child, .B td:first-child { text-align: left; }
+  .B td { text-align: right; padding: 8px 4px; border-top: 1px solid #ffffff0c; }
+  .B .label { font-size: 11px; color: #ffffff80; text-transform: uppercase; letter-spacing: .6px; margin: 16px 0 8px; }
+  .B .card { background: #17171a; border-radius: 16px; padding: 12px; margin-bottom: 10px; }
+  .B .bar { height: 6px; border-radius: 3px; background: #ffffff10; overflow: hidden; margin-top: 8px; }
+  .B .bar i { display: block; height: 100%; background: var(--accent); }
+  .B .tag { font-size: 10px; padding: 2px 6px; border-radius: 6px; background: #f5b54422; color: #f5b544; margin-left: 6px; }
+  .B .xfer { display: grid; grid-template-columns: 1fr auto 1fr auto; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid #ffffff0c; font-size: 13px; }
+  .B .xfer .to { text-align: left; }
+  .B .check { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid #ffffff40; }
+  .B .check.done { background: var(--pos); border-color: var(--pos); }
+
+  /* ---------- C: Chips (bold, violet, big numbers) ---------- */
+  .C { --bg: linear-gradient(180deg, #17122a 0%, #0c0b12 45%); --glass: #ffffff10;
+       --accent: #a78bfa; --on-accent: #140b2e; --pos: #5eead4; --neg: #fb7185; }
+  .C .hero { border-radius: 28px; padding: 20px; background: linear-gradient(140deg, #a78bfa33, #a78bfa08); border: 1px solid #ffffff14; margin: 6px 0 14px; }
+  .C .hero small { color: #ffffffa0; }
+  .C .hero .v { font-size: 44px; font-weight: 750; letter-spacing: -1px; }
+  .C .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .C .tile { background: #ffffff0c; border-radius: 20px; padding: 14px; border: 1px solid #ffffff0d; }
+  .C .tile small { color: #ffffff90; font-size: 12px; }
+  .C .tile b { display: block; font-size: 20px; margin-top: 2px; }
+  .C .h { font-size: 15px; font-weight: 650; margin: 6px 0 10px; display: flex; justify-content: space-between; }
+  .C .pl { display: flex; align-items: center; gap: 12px; background: #ffffff09; border-radius: 18px; padding: 10px 12px; margin-bottom: 8px; }
+  .C .pl .grow { flex: 1; }
+  .C .stack { display: flex; gap: 3px; }
+  .C .stack i { width: 10px; height: 10px; border-radius: 50%; display: block; border: 2px solid #ffffff55; }
+  .C .rebuy { padding: 7px 12px; border-radius: 12px; background: #a78bfa26; color: #c4b5fd; font-weight: 650; font-size: 13px; }
+  .C .pill { padding: 6px 12px; border-radius: 99px; background: #ffffff10; font-size: 12px; }
+  .C .pill.on { background: #a78bfa; color: #140b2e; font-weight: 650; }
+  .C .flow { display: flex; align-items: center; gap: 10px; background: #ffffff09; border-radius: 18px; padding: 12px; margin-bottom: 8px; }
+  .C .flow .amt { margin-left: auto; font-weight: 700; font-size: 16px; }
+  .C .line { flex: 0 0 28px; height: 2px; background: linear-gradient(90deg, #fb7185, #5eead4); border-radius: 2px; }
+  .C .warn { border-radius: 16px; padding: 10px 12px; background: #fbbf2418; color: #fcd34d; font-size: 12px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<h1>Home Poker Tracker</h1>
+<p class="lead">Drei Richtungen, je drei Kernscreens: Gruppe, Live-Tisch, Abrechnung.</p>
+
+<!-- ======================= A ======================= -->
+<section class="dir A">
+  <div class="dir-head"><h2>A · Felt</h2><span>Quiet Glass, Filzgrün als Akzent, Listen in Panels</span></div>
+  <div class="row">
+    <!-- A1 Gruppe -->
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="scroll">
+          <div class="muted" style="font-size:12px">Gruppe</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="title">Freitagsrunde</div><span class="chip">8 Mitglieder</span>
+          </div>
+          <div class="panel" style="margin-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><span class="chip live">● Live</span><div style="font-weight:650;margin-top:8px">Donnerstag bei Max</div>
+              <div class="muted num" style="font-size:12px">6 Spieler · 340 € im Pot · seit 1h 52m</div></div>
+              <div class="arrow">›</div>
+            </div>
+          </div>
+          <div class="seg"><div class="on">Saison 2026</div><div>Gesamt</div><div>Letzte 5</div></div>
+          <div class="panel">
+            <div class="li"><div class="av" style="background:#2f6f57">LG</div><div class="grow">Louis<div class="muted num" style="font-size:12px">14 Spiele</div></div><b class="num pos">+182,50 €</b></div>
+            <div class="li"><div class="av" style="background:#6b4c9a">MK</div><div class="grow">Max<div class="muted num" style="font-size:12px">15 Spiele</div></div><b class="num pos">+96,00 €</b></div>
+            <div class="li"><div class="av" style="background:#9a6b2f">JS</div><div class="grow">Jonas<div class="muted num" style="font-size:12px">11 Spiele</div></div><b class="num pos">+12,00 €</b></div>
+            <div class="li"><div class="av" style="background:#2f5a9a">LW</div><div class="grow">Lena<div class="muted num" style="font-size:12px">13 Spiele</div></div><b class="num neg">−38,50 €</b></div>
+            <div class="li"><div class="av" style="background:#9a2f4f">TB</div><div class="grow">Tim<div class="muted num" style="font-size:12px">14 Spiele</div></div><b class="num neg">−252,00 €</b></div>
+          </div>
+          <div class="btn">Neues Spiel</div>
+        </div>
+        <div class="tabbar"><div class="on"><i></i>Gruppen</div><div><i></i>Spiele</div><div><i></i>Stats</div><div><i></i>Profil</div></div>
+      </div>
+      <div class="cap">Gruppe + Leaderboard</div>
+    </div>
+
+    <!-- A2 Live -->
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="scroll">
+          <div class="muted" style="font-size:12px">Freitagsrunde · Live</div>
+          <div class="title">Donnerstag bei Max</div>
+          <div class="panel" style="margin-top:12px;display:flex;justify-content:space-between;align-items:end">
+            <div><div class="muted" style="font-size:12px">Im Pot</div><div class="big num">340 €</div></div>
+            <div style="text-align:right" class="muted num">Buy-in 20 €<br/>12 Buy-ins</div>
+          </div>
+          <div class="panel">
+            <div class="li"><div class="av" style="background:#9a2f4f">TB</div><div class="grow">Tim<div class="muted num" style="font-size:12px">3× Rebuy · 80 €</div></div><div class="plus">+</div></div>
+            <div class="li"><div class="av" style="background:#2f6f57">LG</div><div class="grow">Louis<div class="muted num" style="font-size:12px">1× · 20 €</div></div><div class="plus">+</div></div>
+            <div class="li"><div class="av" style="background:#6b4c9a">MK</div><div class="grow">Max<div class="muted num" style="font-size:12px">2× · 40 €</div></div><div class="plus">+</div></div>
+            <div class="li"><div class="av" style="background:#2f5a9a">LW</div><div class="grow">Lena<div class="muted num" style="font-size:12px">2× · 40 €</div></div><div class="plus">+</div></div>
+            <div class="li"><div class="av" style="background:#9a6b2f">JS</div><div class="grow">Jonas<div class="muted num" style="font-size:12px">2× · 60 € · ausgecasht</div></div><span class="chip">110 €</span></div>
+            <div class="li"><div class="av" style="background:#4f4f4f">+</div><div class="grow muted">Spieler oder Gast hinzufügen</div></div>
+          </div>
+          <div style="display:flex;gap:10px"><div class="btn ghost" style="flex:1">Teilen</div><div class="btn" style="flex:2">Spiel beenden</div></div>
+        </div>
+        <div class="tabbar"><div><i></i>Gruppen</div><div class="on"><i></i>Spiele</div><div><i></i>Stats</div><div><i></i>Profil</div></div>
+      </div>
+      <div class="cap">Live-Tisch, Rebuy mit einem Tap</div>
+    </div>
+
+    <!-- A3 Abrechnung -->
+    <div>
+      <div class="phone"><div class="status"><span>01:42</span><span>●●● 31%</span></div>
+        <div class="scroll">
+          <div class="muted" style="font-size:12px">Abrechnung</div>
+          <div class="title">Donnerstag bei Max</div>
+          <div class="panel" style="margin-top:12px">
+            <div class="muted" style="font-size:12px;margin-bottom:4px">Ergebnis</div>
+            <div class="li"><div class="grow">Louis</div><span class="muted num" style="margin-right:10px">20 → 92</span><b class="num pos">+72 €</b></div>
+            <div class="li"><div class="grow">Jonas</div><span class="muted num" style="margin-right:10px">60 → 110</span><b class="num pos">+50 €</b></div>
+            <div class="li"><div class="grow">Max</div><span class="muted num" style="margin-right:10px">40 → 38</span><b class="num neg">−2 €</b></div>
+            <div class="li"><div class="grow">Lena</div><span class="muted num" style="margin-right:10px">40 → 0</span><b class="num neg">−40 €</b></div>
+            <div class="li"><div class="grow">Tim</div><span class="muted num" style="margin-right:10px">80 → 0</span><b class="num neg">−80 €</b></div>
+            <div class="li"><div class="grow muted">Differenz</div><b class="num pos">0 € ✓</b></div>
+          </div>
+          <div class="panel">
+            <div class="muted" style="font-size:12px;margin-bottom:4px">4 Überweisungen</div>
+            <div class="li"><div class="grow">Tim <span class="arrow">→</span> Louis</div><b class="num">72 €</b><span class="chip">PayPal</span></div>
+            <div class="li"><div class="grow">Tim <span class="arrow">→</span> Jonas</div><b class="num">8 €</b><span class="chip">PayPal</span></div>
+            <div class="li"><div class="grow">Lena <span class="arrow">→</span> Jonas</div><b class="num">40 €</b><span class="chip">PayPal</span></div>
+            <div class="li"><div class="grow">Max <span class="arrow">→</span> Jonas</div><b class="num">2 €</b><span class="chip">Bar</span></div>
+          </div>
+          <div class="btn">In WhatsApp teilen</div>
+        </div>
+        <div class="tabbar"><div><i></i>Gruppen</div><div class="on"><i></i>Spiele</div><div><i></i>Stats</div><div><i></i>Profil</div></div>
+      </div>
+      <div class="cap">Cash-out → minimale Überweisungen</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= B ======================= -->
+<section class="dir B">
+  <div class="dir-head"><h2>B · Ledger</h2><span>Dicht, tabellarisch, Bernstein, wie ein Kassenbuch</span></div>
+  <div class="row">
+    <!-- B1 -->
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="scroll">
+          <div class="hdr"><b>Freitagsrunde ▾</b><span class="muted">Saison 2026</span></div>
+          <div class="kpis">
+            <div class="kpi"><small>Spiele</small><b class="num">17</b></div>
+            <div class="kpi"><small>Umsatz</small><b class="num">5.420 €</b></div>
+            <div class="kpi"><small>Ø Pot</small><b class="num">319 €</b></div>
+          </div>
+          <table class="num">
+            <tr><th>Spieler</th><th>Sp.</th><th>Buy-in</th><th>ROI</th><th>Netto</th></tr>
+            <tr><td>Louis</td><td>14</td><td>420</td><td class="pos">43%</td><td class="pos">+182,5</td></tr>
+            <tr><td>Max</td><td>15</td><td>560</td><td class="pos">17%</td><td class="pos">+96,0</td></tr>
+            <tr><td>Jonas</td><td>11</td><td>300</td><td class="pos">4%</td><td class="pos">+12,0</td></tr>
+            <tr><td>Anna</td><td>6</td><td>140</td><td>0%</td><td>0,0</td></tr>
+            <tr><td>Lena</td><td>13</td><td>380</td><td class="neg">−10%</td><td class="neg">−38,5</td></tr>
+            <tr><td>Tim</td><td>14</td><td>720</td><td class="neg">−35%</td><td class="neg">−252,0</td></tr>
+          </table>
+          <div class="label">Letzte Spiele</div>
+          <div class="card" style="display:flex;justify-content:space-between"><div>Do 08.10. · bei Max<span class="tag">LIVE</span><div class="muted num" style="font-size:12px">6 Spieler · 340 €</div></div><span class="muted">›</span></div>
+          <div class="card" style="display:flex;justify-content:space-between"><div>Fr 02.10. · bei Lena<div class="muted num" style="font-size:12px">5 Spieler · 260 € · Top: Max +88</div></div><span class="muted">›</span></div>
+        </div>
+        <div class="tabbar"><div class="on"><i></i>Gruppe</div><div><i></i>Spiel</div><div><i></i>Schulden</div><div><i></i>Ich</div></div>
+      </div>
+      <div class="cap">Gruppe als Tabelle mit ROI</div>
+    </div>
+
+    <!-- B2 -->
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="scroll">
+          <div class="hdr"><b>Do 08.10. · Live</b><span class="muted num">1:52 h</span></div>
+          <div class="kpis">
+            <div class="kpi"><small>Pot</small><b class="num">340 €</b></div>
+            <div class="kpi"><small>Am Tisch</small><b class="num">5/6</b></div>
+            <div class="kpi"><small>Ausgezahlt</small><b class="num">110 €</b></div>
+          </div>
+          <div class="card">
+            <table class="num">
+              <tr><th>Spieler</th><th>Buy-ins</th><th>Summe</th><th></th></tr>
+              <tr><td>Tim</td><td>●●●●</td><td>80</td><td style="color:var(--accent);font-weight:700">+20</td></tr>
+              <tr><td>Max</td><td>●●</td><td>40</td><td style="color:var(--accent);font-weight:700">+20</td></tr>
+              <tr><td>Lena</td><td>●●</td><td>40</td><td style="color:var(--accent);font-weight:700">+20</td></tr>
+              <tr><td>Louis</td><td>●</td><td>20</td><td style="color:var(--accent);font-weight:700">+20</td></tr>
+              <tr><td>Anna</td><td>●●</td><td>40</td><td style="color:var(--accent);font-weight:700">+20</td></tr>
+              <tr><td class="muted">Jonas</td><td class="muted">●●●</td><td class="muted">60</td><td class="pos">110 out</td></tr>
+            </table>
+          </div>
+          <div class="label">Verlauf</div>
+          <div class="card num" style="font-size:12px;line-height:1.9">
+            <div><span class="muted">23:06</span> Tim Rebuy 20 €</div>
+            <div><span class="muted">22:51</span> Jonas Cash-out 110 €</div>
+            <div><span class="muted">22:30</span> Anna Rebuy 20 € <span class="muted">· von Max eingetragen</span></div>
+          </div>
+          <div class="btn">Cash-out erfassen</div>
+        </div>
+        <div class="tabbar"><div><i></i>Gruppe</div><div class="on"><i></i>Spiel</div><div><i></i>Schulden</div><div><i></i>Ich</div></div>
+      </div>
+      <div class="cap">Live-Tisch mit Audit-Log</div>
+    </div>
+
+    <!-- B3 -->
+    <div>
+      <div class="phone"><div class="status"><span>12:03</span><span>●●● 64%</span></div>
+        <div class="scroll">
+          <div class="hdr"><b>Offene Schulden</b><span class="muted">Gruppe</span></div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between"><span class="muted">Du bekommst</span><b class="num pos">72,00 €</b></div>
+            <div class="bar"><i style="width:100%"></i></div>
+            <div class="muted num" style="font-size:12px;margin-top:6px">72 € von 72 € erhalten</div>
+          </div>
+          <div class="label">Do 08.10.</div>
+          <div class="card" style="padding:4px 12px">
+            <div class="xfer num"><span>Tim</span><span class="muted">→</span><span class="to">Louis</span><span style="display:flex;gap:10px;align-items:center"><b>72 €</b><i class="check done"></i></span></div>
+            <div class="xfer num"><span>Tim</span><span class="muted">→</span><span class="to">Jonas</span><span style="display:flex;gap:10px;align-items:center"><b>8 €</b><i class="check"></i></span></div>
+            <div class="xfer num"><span>Lena</span><span class="muted">→</span><span class="to">Jonas</span><span style="display:flex;gap:10px;align-items:center"><b>40 €</b><i class="check"></i></span></div>
+            <div class="xfer num"><span>Max</span><span class="muted">→</span><span class="to">Jonas</span><span style="display:flex;gap:10px;align-items:center"><b>2 €</b><i class="check done"></i></span></div>
+          </div>
+          <div class="label">Fr 02.10.</div>
+          <div class="card" style="padding:4px 12px">
+            <div class="xfer num"><span>Tim</span><span class="muted">→</span><span class="to">Max</span><span style="display:flex;gap:10px;align-items:center"><b>60 €</b><i class="check done"></i></span></div>
+          </div>
+          <div class="btn">Lena erinnern</div>
+        </div>
+        <div class="tabbar"><div><i></i>Gruppe</div><div><i></i>Spiel</div><div class="on"><i></i>Schulden</div><div><i></i>Ich</div></div>
+      </div>
+      <div class="cap">Schulden über Spiele hinweg abhaken</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= C ======================= -->
+<section class="dir C">
+  <div class="dir-head"><h2>C · Chips</h2><span>Große Zahlen, verspielt, Violett</span></div>
+  <div class="row">
+    <!-- C1 -->
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="scroll">
+          <div style="display:flex;gap:8px;margin-top:6px"><span class="pill on">Freitagsrunde</span><span class="pill">Uni-Runde</span><span class="pill">+</span></div>
+          <div class="hero">
+            <small>Dein Saldo 2026</small>
+            <div class="v num pos">+182,50 €</div>
+            <svg viewBox="0 0 300 60" width="100%" height="60"><polyline fill="none" stroke="#5eead4" stroke-width="2.5" stroke-linejoin="round" points="0,45 25,50 50,38 75,42 100,30 125,34 150,22 175,28 200,18 225,24 250,12 275,16 300,6"/></svg>
+            <small class="num">#1 von 8 · 14 Spiele · Bestes Spiel +72 €</small>
+          </div>
+          <div class="grid2">
+            <div class="tile"><small>Gewinnquote</small><b class="num">64%</b></div>
+            <div class="tile"><small>Ø pro Abend</small><b class="num pos">+13 €</b></div>
+          </div>
+          <div class="h"><span>Rangliste</span><span class="muted" style="font-weight:400">Alle ›</span></div>
+          <div class="pl"><div class="av" style="background:#7c3aed">LG</div><div class="grow">Louis</div><b class="num pos">+182,5</b></div>
+          <div class="pl"><div class="av" style="background:#0d9488">MK</div><div class="grow">Max</div><b class="num pos">+96,0</b></div>
+          <div class="pl"><div class="av" style="background:#db2777">TB</div><div class="grow">Tim</div><b class="num neg">−252,0</b></div>
+        </div>
+        <div class="tabbar"><div class="on"><i></i>Home</div><div><i></i>Spiele</div><div><i></i>Gruppe</div><div><i></i>Ich</div></div>
+      </div>
+      <div class="cap">Persönlicher Saldo zuerst</div>
+    </div>
+
+    <!-- C2 -->
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="scroll">
+          <div class="hero" style="text-align:center">
+            <small>Pot · Do bei Max</small>
+            <div class="v num">340 €</div>
+            <small class="num">Buy-in 20 € · 1h 52m · Code <b style="color:#fff">K7Q2</b></small>
+          </div>
+          <div class="pl"><div class="av" style="background:#db2777">TB</div><div class="grow">Tim<div class="stack" style="margin-top:4px"><i style="background:#fb7185"></i><i style="background:#fb7185"></i><i style="background:#fb7185"></i><i style="background:#fb7185"></i></div></div><span class="num muted">80 €</span><span class="rebuy">+20</span></div>
+          <div class="pl"><div class="av" style="background:#0d9488">MK</div><div class="grow">Max<div class="stack" style="margin-top:4px"><i style="background:#5eead4"></i><i style="background:#5eead4"></i></div></div><span class="num muted">40 €</span><span class="rebuy">+20</span></div>
+          <div class="pl"><div class="av" style="background:#ca8a04">LW</div><div class="grow">Lena<div class="stack" style="margin-top:4px"><i style="background:#fcd34d"></i><i style="background:#fcd34d"></i></div></div><span class="num muted">40 €</span><span class="rebuy">+20</span></div>
+          <div class="pl"><div class="av" style="background:#7c3aed">LG</div><div class="grow">Louis<div class="stack" style="margin-top:4px"><i style="background:#a78bfa"></i></div></div><span class="num muted">20 €</span><span class="rebuy">+20</span></div>
+          <div class="pl" style="opacity:.55"><div class="av" style="background:#2563eb">JS</div><div class="grow">Jonas · raus</div><span class="num pos">110 €</span></div>
+          <div class="btn" style="margin-top:12px">Abrechnen</div>
+        </div>
+        <div class="tabbar"><div><i></i>Home</div><div class="on"><i></i>Spiele</div><div><i></i>Gruppe</div><div><i></i>Ich</div></div>
+      </div>
+      <div class="cap">Live-Tisch mit Join-Code</div>
+    </div>
+
+    <!-- C3 -->
+    <div>
+      <div class="phone"><div class="status"><span>01:42</span><span>●●● 31%</span></div>
+        <div class="scroll">
+          <div class="h" style="font-size:20px;margin-top:8px"><span>Abrechnen</span></div>
+          <div class="warn num">Chips gezählt 238 €, Pot 240 €. 2 € fehlen, proportional verteilen?</div>
+          <div class="grid2">
+            <div class="tile"><small>Louis</small><b class="num">92 €</b></div>
+            <div class="tile"><small>Max</small><b class="num">38 €</b></div>
+            <div class="tile"><small>Tim</small><b class="num">0 €</b></div>
+            <div class="tile"><small>Lena</small><b class="num muted">tippen…</b></div>
+          </div>
+          <div class="h"><span>Wer zahlt wen</span><span class="muted" style="font-weight:400">4</span></div>
+          <div class="flow"><div class="av" style="background:#db2777">TB</div><div class="line"></div><div class="av" style="background:#7c3aed">LG</div><span class="amt num">72 €</span></div>
+          <div class="flow"><div class="av" style="background:#db2777">TB</div><div class="line"></div><div class="av" style="background:#2563eb">JS</div><span class="amt num">8 €</span></div>
+          <div class="flow"><div class="av" style="background:#ca8a04">LW</div><div class="line"></div><div class="av" style="background:#2563eb">JS</div><span class="amt num">40 €</span></div>
+          <div class="flow"><div class="av" style="background:#0d9488">MK</div><div class="line"></div><div class="av" style="background:#2563eb">JS</div><span class="amt num">2 €</span></div>
+          <div class="btn" style="margin-top:6px">Abschließen</div>
+        </div>
+        <div class="tabbar"><div><i></i>Home</div><div class="on"><i></i>Spiele</div><div><i></i>Gruppe</div><div><i></i>Ich</div></div>
+      </div>
+      <div class="cap">Chip-Count mit Differenz-Check</div>
+    </div>
+  </div>
+</section>
+</body>
+</html>
