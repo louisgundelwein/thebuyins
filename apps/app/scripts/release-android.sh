@@ -5,6 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 source "${ANDROID_SIGNING_ENV:-$HOME/.thebuyins/android-upload.env}"
 CI=1 npx expo prebuild --clean -p android
 

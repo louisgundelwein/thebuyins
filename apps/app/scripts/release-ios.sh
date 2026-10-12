@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Local App Store build: prebuild, archive, export, upload to App Store Connect.
 # Bump expo.ios.buildNumber in app.json before each upload. Pass --no-upload to stop after export.
-# Needs AuthKey_$ASC_KEY_ID.p8 in ~/.appstoreconnect/private_keys (kept out of git).
+# Reads ASC_KEY_ID, ASC_ISSUER, ASC_KEY_PATH from apps/app/.env (gitignored).
+# altool finds the key by ID in ~/.appstoreconnect/private_keys.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-ASC_KEY_ID="${ASC_KEY_ID:-83P3B2N559}"
-ASC_ISSUER="${ASC_ISSUER:-a76f12c8-1de8-4ada-b55e-07341fa48eeb}"
-KEY="$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8"
+set -a; source .env; set +a
+KEY="$ASC_KEY_PATH"
 AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER")
 OUT=build/ios
 [[ -f "$KEY" ]] || { echo "missing $KEY" >&2; exit 1; }
