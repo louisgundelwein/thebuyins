@@ -8,8 +8,13 @@
     "scheme": "thebuyins",
     "userInterfaceStyle": "dark",
     "ios": {
-      "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.thebuyins.app"
+      "bundleIdentifier": "com.thebuyins.app",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "appleTeamId": "JR5GVNGJD8"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +24,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.thebuyins.app"
+      "package": "com.thebuyins.app",
+      "versionCode": 1
     },
     "web": {
       "output": "single",
@@ -32,7 +38,7 @@
         {
           "backgroundColor": "#0c0b12",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 120
         }
       ],
       "expo-secure-store"
