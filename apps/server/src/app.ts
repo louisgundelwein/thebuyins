@@ -10,6 +10,7 @@ const api = new Hono().route("/", groupRoutes).route("/", gameRoutes);
 export const app = new Hono()
   .use("/api/*", cors({ origin: webOrigins, credentials: true }))
   .on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw))
+  .get("/api/health", (c) => c.json({ ok: true }))
   .route("/api", api)
   .onError((err, c) => {
     if (err instanceof HTTPException) return c.json({ error: err.message }, err.status);

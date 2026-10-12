@@ -24,7 +24,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
   const user = session?.user;
   const current = groups.data?.find((g) => g.id === groupId);
   const close = () => setMenu(null);
-  const go = (href: "/group/new" | "/join") => {
+  const go = (href: "/group/new" | "/join" | "/account") => {
     close();
     router.push(href);
   };
@@ -63,6 +63,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
           </Item>
         )}
         <Item onPress={() => go("/group/new")} right="+">Neue Gruppe</Item>
+        <Item onPress={() => go("/account")} right="›">Account</Item>
         <Item onPress={() => { close(); void authClient.signOut(); }} danger>Ausloggen</Item>
       </Sheet>
     </View>
