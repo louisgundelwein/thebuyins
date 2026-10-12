@@ -14,7 +14,7 @@ The Buy-Ins is a ledger and scorekeeper for private home poker games among frien
 ## Demo account
 - Email: `<DEMO_EMAIL>`
 - Password: `<DEMO_PASSWORD>`
-The demo user is already a member of a group with past games.
+The demo user is a member of the group "Freitagsrunde" with four guests, three finished games (history, leaderboard and balance chart are filled) and one running game "Heute" for the live tab.
 
 ## Quick test flow
 1. Sign in with the demo account (email and password).
@@ -28,7 +28,7 @@ The demo user is already a member of a group with past games.
 Note: the app UI is currently in German. Amounts are in euros.
 
 ## Account deletion
-Account deletion is offered in the profile menu: tap the avatar at the top right, then the delete account option. Deletion is also possible through the support page at `<origin>/support`.
+Account deletion is in the app: tap the avatar at the top right, then "Account", then "Account löschen" and confirm with the password. Deletion is also possible through the support page at `<origin>/support`.
 
 ## Other
 - Sign-in is email and password only. No third-party login.
