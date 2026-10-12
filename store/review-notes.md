@@ -33,4 +33,4 @@ Account deletion is offered in the profile menu: tap the avatar at the top right
 ## Other
 - Sign-in is email and password only. No third-party login.
 - No ads, no third-party analytics, no tracking.
-- Contact: `<SUPPORT_EMAIL>`
+- Contact: `lmgzero@proton.me`
