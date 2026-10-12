@@ -1,4 +1,4 @@
-import type { Api } from "@homegame/server";
+import type { Api } from "@thebuyins/server";
 import { hc, type InferResponseType } from "hono/client";
 import { Platform } from "react-native";
 import { API_URL, authClient } from "./auth";

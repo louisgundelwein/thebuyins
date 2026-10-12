@@ -1,0 +1,88 @@
+import { router, Tabs } from "expo-router";
+import type { ComponentProps } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ChartIcon, ChipIcon } from "@/components/icons";
+import { useSelectedGroup } from "@/lib/group";
+import { useGroup } from "@/lib/queries";
+import { c } from "@/lib/theme";
+
+type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>>[0];
+
+export default function TabsLayout() {
+  return (
+    <Tabs tabBar={(props) => <Dock {...props} />} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: c.bg } }}>
+      <Tabs.Screen name="index" options={{ title: "Übersicht" }} />
+      <Tabs.Screen name="live" options={{ title: "Live" }} />
+    </Tabs>
+  );
+}
+
+/** Floating glass dock: Übersicht, a raised plus for a new game, and Live with a dot while a game runs. */
+function Dock({ state, navigation }: TabBarProps) {
+  const insets = useSafeAreaInsets();
+  const { groupId } = useSelectedGroup();
+  const page = useGroup(groupId);
+  const hasLive = page.data?.games.some((g) => g.status === "live") ?? false;
+  const active = state.routes[state.index]?.name;
+
+  const tab = (name: "index" | "live", label: string, Icon: typeof ChartIcon, dot = false) => {
+    const on = active === name;
+    return (
+      <Pressable style={s.tab} onPress={() => navigation.navigate(name)} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+        <View>
+          <Icon color={on ? c.accent : "rgba(255,255,255,0.5)"} />
+          {dot && <View style={s.dot} />}
+        </View>
+        <Text style={[s.label, on && { color: c.text }]}>{label}</Text>
+      </Pressable>
+    );
+  };
+
+  return (
+    <View style={[s.dock, { bottom: Math.max(insets.bottom, 12) + 4 }]} pointerEvents="box-none">
+      {tab("index", "Übersicht", ChartIcon)}
+      <Pressable
+        style={({ pressed }) => [s.plus, pressed && { opacity: 0.85 }]}
+        disabled={!groupId}
+        onPress={() => groupId && router.push({ pathname: "/game/new", params: { groupId } })}
+        accessibilityLabel="Neues Spiel"
+      >
+        <Text style={s.plusText}>+</Text>
+      </Pressable>
+      {tab("live", "Live", ChipIcon, hasLive)}
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  dock: {
+    position: "absolute",
+    alignSelf: "center",
+    width: "92%",
+    maxWidth: 420,
+    height: 66,
+    borderRadius: 26,
+    backgroundColor: "rgba(30,26,46,0.92)",
+    borderWidth: 1,
+    borderColor: c.border,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    boxShadow: "0 12px 32px rgba(0,0,0,0.45)",
+  },
+  tab: { width: 90, alignItems: "center", gap: 4 },
+  dot: { position: "absolute", right: -3, top: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: c.pos, borderWidth: 2, borderColor: "#1e1a2e" },
+  label: { fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: "600" },
+  plus: {
+    width: 58,
+    height: 58,
+    marginTop: -26,
+    borderRadius: 20,
+    backgroundColor: c.accent,
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 10px 28px rgba(167,139,250,0.4)",
+  },
+  plusText: { color: c.onAccent, fontSize: 30, fontWeight: "500", marginTop: -2 },
+});

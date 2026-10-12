@@ -1,4 +1,4 @@
-import { distributeDifference } from "@homegame/core";
+import { distributeDifference } from "@thebuyins/core";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
@@ -34,7 +34,7 @@ export const gameRoutes = new Hono<AppEnv>()
     return c.json(await gameFor(c.var.user.id, c.req.valid("param").gameId));
   })
 
-  /** Seats a group member who arrives late, with the standard buy-in. */
+  /** Seats a group member who arrives late, in the next free position, with the standard buy-in. */
   .post(
     "/games/:gameId/seats",
     zValidator("param", gameParam),
@@ -49,7 +49,8 @@ export const gameRoutes = new Hono<AppEnv>()
       if (state.seats.some((s) => s.memberId === memberId)) throw new HTTPException(409, { message: "Sitzt schon am Tisch" });
 
       await db.transaction(async (tx) => {
-        const [s] = await tx.insert(seat).values({ gameId, memberId }).returning();
+        const position = Math.max(0, ...state.seats.map((x) => x.position)) + 1;
+        const [s] = await tx.insert(seat).values({ gameId, memberId, position }).returning();
         if (!s) throw new Error("insert failed");
         await tx.insert(buyIn).values({ seatId: s.id, amountCents: state.game.buyInCents, createdBy: c.var.user.id });
       });

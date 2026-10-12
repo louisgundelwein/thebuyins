@@ -15,11 +15,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { avatarColor, c, radius } from "@/lib/theme";
 
-/** Scrollable page with the violet top glow. Content is capped in width so web stays phone-shaped. */
-export function Screen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
+/** Height kept free at the bottom of tab screens for the floating dock. */
+export const DOCK_SPACE = 92;
+
+/**
+ * Scrollable page with the violet top glow. Content is capped in width so web stays phone-shaped.
+ * Tab screens pass `dock` so content and footer stay above the floating tab bar.
+ */
+export function Screen({ children, footer, dock }: { children: ReactNode; footer?: ReactNode; dock?: boolean }) {
   return (
     <LinearGradient colors={[c.bgTop, c.bg]} locations={[0, 0.45]} style={s.fill}>
-      <SafeAreaView style={s.fill} edges={["top", "bottom"]}>
+      <SafeAreaView style={[s.fill, dock && { paddingBottom: DOCK_SPACE }]} edges={["top", "bottom"]}>
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
           <View style={s.column}>{children}</View>
         </ScrollView>
@@ -58,11 +64,22 @@ export const Row = ({ children, dim }: { children: ReactNode; dim?: boolean }) =
   <View style={[s.row, dim && { opacity: 0.55 }]}>{children}</View>
 );
 
-export function Avatar({ id, name }: { id: string; name: string }) {
+/**
+ * Member avatar. Accounts get a filled colour and a teal badge, guests a dashed outline,
+ * so it's always visible who has their own login.
+ */
+export function Avatar({ id, name, guest, size = 34 }: { id: string; name: string; guest?: boolean; size?: number }) {
   const initials = name.split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
   return (
-    <View style={[s.avatar, { backgroundColor: avatarColor(id) }]}>
-      <T size={12} weight="700">{initials}</T>
+    <View
+      style={[
+        s.avatar,
+        { width: size, height: size, borderRadius: size / 2 },
+        guest ? s.guest : { backgroundColor: avatarColor(id) },
+      ]}
+    >
+      <T size={size > 40 ? 15 : 12} weight="700" tone={guest ? "muted" : undefined}>{initials}</T>
+      {!guest && <View style={s.badge} />}
     </View>
   );
 }
@@ -135,7 +152,9 @@ const s = StyleSheet.create({
   hero: { borderRadius: radius.hero, padding: 20, borderWidth: 1, borderColor: c.border, gap: 4 },
   tile: { flex: 1, backgroundColor: c.faint, borderRadius: radius.tile, padding: 14, borderWidth: 1, borderColor: c.border },
   row: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "rgba(255,255,255,0.04)", borderRadius: radius.row, paddingVertical: 10, paddingHorizontal: 12 },
-  avatar: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
+  avatar: { alignItems: "center", justifyContent: "center" },
+  guest: { borderWidth: 1.5, borderStyle: "dashed", borderColor: "rgba(255,255,255,0.4)" },
+  badge: { position: "absolute", right: -2, bottom: -2, width: 13, height: 13, borderRadius: 7, backgroundColor: c.pos, borderWidth: 2, borderColor: c.bg },
   button: { height: 50, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12, backgroundColor: c.accentSoft },
   field: { height: 48, borderRadius: 14, backgroundColor: c.faint, borderWidth: 1, borderColor: c.border, color: c.text, paddingHorizontal: 14, fontSize: 16 },

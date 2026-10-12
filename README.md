@@ -1,4 +1,4 @@
-# Homegame
+# The Buy-Ins
 
 Home-Poker-Tracker: Gruppen, Live-Buy-ins, Abrechnung mit minimalen Überweisungen. Eine Codebasis für iOS, Android und Web.
 
@@ -23,6 +23,6 @@ Am Handy: `EXPO_PUBLIC_API_URL=http://<LAN-IP>:3000` setzen. Magic Links werden 
 
 ```sh
 export ANDROID_HOME=~/Android/Sdk JAVA_HOME=<JDK 17>
-pnpm --filter @homegame/app android        # nativer Build + Installation
+pnpm --filter @thebuyins/app android        # nativer Build + Installation
 adb reverse tcp:3000 tcp:3000              # API im Emulator unter localhost
 ```

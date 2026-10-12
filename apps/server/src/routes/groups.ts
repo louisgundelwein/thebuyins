@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "../db";
 import { buyIn, game, group, member, seat } from "../db/schema/poker";
 import { membershipOf, requireUser, type AppEnv } from "../middleware";
-import { leaderboard } from "../stats";
+import { finishedResults, historyOf, leaderboard } from "../stats";
 
 const cents = z.number().int().positive();
 
@@ -50,7 +50,7 @@ export const groupRoutes = new Hono<AppEnv>()
     },
   )
 
-  /** Group page: members, leaderboard and games. `season` is a year or "all". */
+  /** Group page: members, games, standings (`season` is a year or "all") and the caller's game history. */
   .get(
     "/groups/:groupId",
     zValidator("query", z.object({ season: z.union([z.literal("all"), z.coerce.number().int()]).default("all") })),
@@ -59,14 +59,15 @@ export const groupRoutes = new Hono<AppEnv>()
       const me = await membershipOf(c.var.user.id, groupId);
       const { season } = c.req.valid("query");
 
-      const [g, members, games, standings] = await Promise.all([
+      const [g, members, games, results] = await Promise.all([
         db.query.group.findFirst({ where: eq(group.id, groupId) }),
         db.select().from(member).where(eq(member.groupId, groupId)).orderBy(member.displayName),
         db.select().from(game).where(eq(game.groupId, groupId)).orderBy(desc(game.startedAt)),
-        leaderboard(groupId, season === "all" ? undefined : season),
+        finishedResults(groupId),
       ]);
       if (!g) throw new HTTPException(404);
-      return c.json({ group: g, me, members, games, standings });
+      const standings = leaderboard(results, season === "all" ? undefined : season);
+      return c.json({ group: g, me, members, games, standings, history: historyOf(results, me.id) });
     },
   )
 
@@ -118,7 +119,7 @@ export const groupRoutes = new Hono<AppEnv>()
     },
   )
 
-  /** Starts a game and gives every selected member their first buy-in. */
+  /** Starts a game. `memberIds` is the drawn seating order; everyone gets their first buy-in. */
   .post(
     "/groups/:groupId/games",
     zValidator(
@@ -140,7 +141,7 @@ export const groupRoutes = new Hono<AppEnv>()
         if (!g) throw new Error("insert failed");
         const seats = await tx
           .insert(seat)
-          .values(memberIds.map((memberId) => ({ gameId: g.id, memberId })))
+          .values(memberIds.map((memberId, i) => ({ gameId: g.id, memberId, position: i + 1 })))
           .returning();
         await tx.insert(buyIn).values(seats.map((s) => ({ seatId: s.id, amountCents: buyInCents, createdBy: c.var.user.id })));
         return g;

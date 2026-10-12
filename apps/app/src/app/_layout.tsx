@@ -22,6 +22,8 @@ export default function RootLayout() {
           <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)/sign-in" />
           </Stack.Protected>
+          {/* Unguarded so invite links work signed in or out. Declared last so it never becomes the fallback route. */}
+          <Stack.Screen name="join" />
         </Stack>
       </ThemeProvider>
     </QueryClientProvider>

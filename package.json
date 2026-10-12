@@ -1,11 +1,11 @@
 {
-  "name": "homegame",
+  "name": "thebuyins",
   "private": true,
   "scripts": {
-    "dev:server": "pnpm --filter @homegame/server dev",
-    "dev:app": "pnpm --filter @homegame/app start",
+    "dev:server": "pnpm --filter @thebuyins/server dev",
+    "dev:app": "pnpm --filter @thebuyins/app start",
     "db:up": "docker compose up -d db",
-    "db:push": "pnpm --filter @homegame/server db:push",
+    "db:push": "pnpm --filter @thebuyins/server db:push",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck"
   }

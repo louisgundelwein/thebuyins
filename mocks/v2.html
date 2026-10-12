@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<title>Tabs, Graph, Seating</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #08070c; color: #fff; font: 14px/1.4 -apple-system, Inter, system-ui, sans-serif; padding: 36px 32px 80px; }
+  .num { font-variant-numeric: tabular-nums; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .lead { color: #9a97a8; margin-bottom: 32px; }
+  section { margin-bottom: 56px; }
+  section > h2 { font-size: 17px; margin-bottom: 4px; }
+  section > p { color: #9a97a8; margin-bottom: 18px; }
+  .row { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+  .cap { color: #9a97a8; font-size: 12px; margin-top: 10px; text-align: center; max-width: 360px; }
+  .cap b { color: #fff; }
+
+  /* Direction C tokens */
+  :root { --bg: #0c0b12; --top: #17122a; --accent: #a78bfa; --on: #140b2e; --soft: rgba(167,139,250,.16); --pos: #5eead4; --neg: #fb7185; --faint: rgba(255,255,255,.06); --border: rgba(255,255,255,.08); --muted: rgba(255,255,255,.6); }
+  .phone { width: 360px; height: 760px; border-radius: 44px; overflow: hidden; position: relative; border: 1px solid #ffffff14; background: linear-gradient(180deg, var(--top) 0%, var(--bg) 45%); box-shadow: 0 30px 80px #0008; }
+  .status { display: flex; justify-content: space-between; padding: 14px 26px 4px; font-size: 13px; font-weight: 600; }
+  .body { padding: 6px 18px 120px; }
+  .muted { color: var(--muted); } .pos { color: var(--pos); } .neg { color: var(--neg); }
+  .top { display: flex; justify-content: space-between; align-items: center; margin: 6px 0 12px; }
+  .top .t { font-size: 22px; font-weight: 800; }
+  .me { width: 34px; height: 34px; border-radius: 50%; background: #7c3aed; display: grid; place-items: center; font-size: 12px; font-weight: 700; border: 2px solid rgba(255,255,255,.18); }
+  .grp { display: inline-flex; gap: 6px; align-items: center; padding: 6px 12px; border-radius: 99px; background: var(--faint); font-size: 13px; font-weight: 600; }
+  .hero { border-radius: 26px; padding: 16px 16px 10px; background: linear-gradient(140deg, rgba(167,139,250,.2), rgba(167,139,250,.03)); border: 1px solid var(--border); margin-bottom: 12px; }
+  .big { font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+  .pills { display: flex; gap: 6px; margin-top: 8px; }
+  .pill { padding: 5px 11px; border-radius: 99px; background: var(--faint); font-size: 12px; color: var(--muted); }
+  .pill.on { background: var(--accent); color: var(--on); font-weight: 700; }
+  .h { display: flex; justify-content: space-between; font-weight: 650; margin: 14px 0 8px; }
+  .r { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,.04); border-radius: 18px; padding: 10px 12px; margin-bottom: 8px; }
+  .r .g { flex: 1; }
+  .sm { font-size: 12px; }
+  .av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; position: relative; }
+  .av.guest { background: transparent !important; border: 1.5px dashed rgba(255,255,255,.4); color: var(--muted); }
+  .badge { position: absolute; right: -2px; bottom: -2px; width: 14px; height: 14px; border-radius: 50%; background: var(--pos); border: 2px solid var(--bg); }
+  .tag { font-size: 10px; padding: 2px 7px; border-radius: 6px; background: var(--faint); color: var(--muted); margin-left: 6px; font-weight: 600; }
+  .tag.acc { background: rgba(94,234,212,.14); color: var(--pos); }
+  .check { width: 24px; height: 24px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,.3); display: grid; place-items: center; font-size: 13px; }
+  .check.on { background: var(--accent); border-color: var(--accent); color: var(--on); font-weight: 800; }
+  .btn { height: 50px; border-radius: 16px; background: var(--accent); color: var(--on); font-weight: 700; display: grid; place-items: center; }
+  .btn.ghost { background: var(--faint); color: #fff; }
+  .foot { position: absolute; left: 18px; right: 18px; bottom: 22px; display: flex; gap: 10px; }
+  .foot > * { flex: 1; }
+
+  /* Tab bars */
+  .dock { position: absolute; left: 14px; right: 14px; bottom: 16px; height: 66px; border-radius: 26px; background: rgba(30,26,46,.72); backdrop-filter: blur(20px); border: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; font-size: 11px; color: rgba(255,255,255,.5); }
+  .dock .it { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 80px; }
+  .dock .it i { width: 22px; height: 22px; border-radius: 7px; background: rgba(255,255,255,.18); display: block; }
+  .dock .it.on { color: #fff; } .dock .it.on i { background: var(--accent); }
+  .dock .plus { width: 58px; height: 58px; border-radius: 20px; background: var(--accent); color: var(--on); display: grid; place-items: center; font-size: 30px; font-weight: 500; margin-top: -26px; box-shadow: 0 10px 30px rgba(167,139,250,.35); }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pos); position: absolute; margin: -2px 0 0 18px; }
+
+  .flat { position: absolute; left: 0; right: 0; bottom: 0; height: 84px; background: #0e0c16; border-top: 1px solid rgba(255,255,255,.05); display: flex; justify-content: space-around; align-items: flex-start; padding-top: 10px; font-size: 11px; color: rgba(255,255,255,.5); }
+  .flat .it { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 90px; }
+  .flat .it i { width: 22px; height: 22px; border-radius: 7px; background: rgba(255,255,255,.18); display: block; }
+  .flat .it.on { color: #fff; } .flat .it.on i { background: var(--accent); }
+  .flat .plus { width: 64px; height: 40px; border-radius: 14px; background: var(--accent); color: var(--on); display: grid; place-items: center; font-size: 24px; font-weight: 600; }
+
+  .liveTab { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 80px; color: #fff; }
+  .liveTab .lv { padding: 4px 9px; border-radius: 10px; background: rgba(94,234,212,.16); color: var(--pos); font-weight: 700; font-size: 12px; }
+
+  /* Seating */
+  .table { position: relative; width: 300px; height: 420px; margin: 8px auto 0; }
+  .felt { position: absolute; left: 60px; top: 50px; width: 180px; height: 320px; border-radius: 90px; background: radial-gradient(ellipse at center, #2a1f4d 0%, #1a1530 70%); border: 2px solid rgba(167,139,250,.35); display: grid; place-items: center; text-align: center; }
+  .seat { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 70px; font-size: 12px; }
+  .seat .n { font-size: 10px; color: var(--muted); }
+  .dealer { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #fff; color: #000; font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+  .sheet { position: absolute; right: 14px; top: 64px; width: 230px; border-radius: 22px; background: rgba(36,31,56,.92); backdrop-filter: blur(20px); border: 1px solid var(--border); padding: 8px; box-shadow: 0 20px 50px #000a; }
+  .sheet .mi { padding: 11px 12px; border-radius: 14px; display: flex; justify-content: space-between; }
+  .sheet .mi:hover { background: var(--faint); }
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
+</style>
+</head>
+<body>
+<h1>Tabs, Graph, Seating</h1>
+<p class="lead">Stil C bleibt. Wähle je Abschnitt eine Variante.</p>
+
+<!-- ============ 1. Übersicht + Tabbar ============ -->
+<section>
+  <h2>1 · Übersicht und Tab-Leiste</h2>
+  <p>Links Übersicht, Mitte Plus, rechts Live-Spiel. Profil oben rechts.</p>
+  <div class="row">
+
+    <!-- A -->
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="body">
+          <div class="top"><span class="grp">Titanom ▾</span><div class="me">LG</div></div>
+          <div class="hero">
+            <div class="muted sm">Dein Saldo</div>
+            <div class="big num pos">+124,00 €</div>
+            <div class="sm num"><span class="pos">▲ 25 €</span> <span class="muted">letztes Spiel</span></div>
+            <svg class="chart" data-kind="area" viewBox="0 0 300 120" width="100%" height="120"></svg>
+            <div class="pills"><span class="pill">1M</span><span class="pill">3M</span><span class="pill on">2026</span><span class="pill">Alles</span></div>
+          </div>
+          <div class="h"><span>Historie</span><span class="muted sm">12 Spiele</span></div>
+          <div class="r"><div class="g">Donnerstag bei Max<div class="muted sm">Do 08.10. · 6 Spieler</div></div><b class="num pos">+25 €</b></div>
+          <div class="r"><div class="g">Freitag bei Lena<div class="muted sm">Fr 02.10. · 5 Spieler</div></div><b class="num neg">−5 €</b></div>
+          <div class="r"><div class="g">Geburtstag Tim<div class="muted sm">Sa 26.09. · 8 Spieler</div></div><b class="num pos">+18 €</b></div>
+        </div>
+        <div class="dock">
+          <div class="it on"><i></i>Übersicht</div>
+          <div class="plus">+</div>
+          <div class="it" style="position:relative"><i></i><span class="live-dot"></span>Live</div>
+        </div>
+      </div>
+      <div class="cap"><b>A · Schwebendes Dock.</b> Flächen-Chart mit Zeitraum-Pills, Plus ragt aus dem Dock, grüner Punkt bei laufendem Spiel.</div>
+    </div>
+
+    <!-- B -->
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="body">
+          <div class="top"><div><div class="muted sm">Titanom ▾</div><div class="t">Übersicht</div></div><div class="me">LG</div></div>
+          <div style="display:flex;align-items:baseline;gap:10px"><div class="big num">+124 €</div><span class="pos sm num">+14,3 % ROI</span></div>
+          <svg class="chart" data-kind="line" viewBox="0 0 300 150" width="100%" height="150" style="margin:4px 0"></svg>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px" class="num">
+            <div class="r" style="flex-direction:column;gap:0;align-items:flex-start;padding:8px 10px"><span class="muted sm">Spiele</span><b>12</b></div>
+            <div class="r" style="flex-direction:column;gap:0;align-items:flex-start;padding:8px 10px"><span class="muted sm">Quote</span><b>67 %</b></div>
+            <div class="r" style="flex-direction:column;gap:0;align-items:flex-start;padding:8px 10px"><span class="muted sm">Best</span><b class="pos">+50</b></div>
+            <div class="r" style="flex-direction:column;gap:0;align-items:flex-start;padding:8px 10px"><span class="muted sm">Worst</span><b class="neg">−30</b></div>
+          </div>
+          <div class="muted sm" style="margin:10px 0 6px">OKTOBER</div>
+          <div class="r"><div class="g">Do 08.10. · bei Max</div><span class="muted sm num">20 → 45</span><b class="num pos">+25</b></div>
+          <div class="r"><div class="g">Fr 02.10. · bei Lena</div><span class="muted sm num">40 → 35</span><b class="num neg">−5</b></div>
+        </div>
+        <div class="flat">
+          <div class="it on"><i></i>Übersicht</div>
+          <div class="plus">+</div>
+          <div class="liveTab"><span class="lv">● 1:52</span>Live</div>
+        </div>
+      </div>
+      <div class="cap"><b>B · Feste Leiste, Börsen-Look.</b> Linie mit Nulllinie, rot unter null. Live-Tab zeigt die laufende Spielzeit.</div>
+    </div>
+
+    <!-- C -->
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="body">
+          <div class="top"><span class="grp">Titanom ▾</span><div class="me">LG</div></div>
+          <div class="hero">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end">
+              <div><div class="muted sm">Saldo 2026</div><div class="big num pos">+124 €</div></div>
+              <div class="sm muted num" style="text-align:right">#1 von 8<br/>12 Spiele</div>
+            </div>
+            <svg class="chart" data-kind="bars" viewBox="0 0 300 130" width="100%" height="130"></svg>
+            <div class="muted sm">Balken je Abend, Linie kumuliert</div>
+          </div>
+          <div class="h"><span>Historie</span><span class="muted sm">Alle ›</span></div>
+          <div class="r"><div class="av" style="background:var(--soft);color:#c4b5fd">8.10</div><div class="g">bei Max<div class="muted sm">Rang 1 von 6</div></div><b class="num pos">+25 €</b></div>
+          <div class="r"><div class="av" style="background:var(--soft);color:#c4b5fd">2.10</div><div class="g">bei Lena<div class="muted sm">Rang 3 von 5</div></div><b class="num neg">−5 €</b></div>
+        </div>
+        <div class="dock" style="left:60px;right:60px">
+          <div class="it on" style="width:60px"><i></i>Ich</div>
+          <div class="plus" style="margin-top:0;width:52px;height:46px;border-radius:16px">+</div>
+          <div class="it" style="width:60px;position:relative"><i></i><span class="live-dot"></span>Live</div>
+        </div>
+      </div>
+      <div class="cap"><b>C · Kompaktes Dock.</b> Gewinn/Verlust pro Abend als Balken plus kumulierte Linie. Historie mit Rang pro Abend.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. Live, Profil ============ -->
+<section>
+  <h2>2 · Live-Tab und Profil-Menü</h2>
+  <p>Rechter Tab ohne laufendes Spiel und mit. Profil öffnet ein Menü oben rechts.</p>
+  <div class="row">
+    <div>
+      <div class="phone"><div class="status"><span>19:02</span><span>●●● 90%</span></div>
+        <div class="body" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:180px;gap:10px">
+          <div style="font-size:44px">♠</div>
+          <div style="font-size:20px;font-weight:800">Gerade kein Spiel</div>
+          <div class="muted">Starte eins mit Plus oder tritt per Code bei.</div>
+          <div class="btn ghost" style="width:200px;margin-top:10px">Code eingeben</div>
+        </div>
+        <div class="dock"><div class="it"><i></i>Übersicht</div><div class="plus">+</div><div class="it on"><i></i>Live</div></div>
+      </div>
+      <div class="cap"><b>Live, leer.</b></div>
+    </div>
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="body">
+          <div class="top"><span class="grp">● Live · 1:52</span><div class="me">LG</div></div>
+          <div class="hero" style="text-align:center"><div class="muted sm">Pot · Donnerstag bei Max</div><div class="big num">340 €</div><div class="muted sm">Buy-in 20 € · Code K7Q2XZ</div></div>
+          <div class="r"><div class="muted sm" style="width:18px">1</div><div class="av" style="background:#db2777">TB</div><div class="g">Tim<div class="muted sm num">4 Buy-ins</div></div><span class="muted num">80 €</span><span class="pill on" style="background:var(--soft);color:#c4b5fd">+20</span></div>
+          <div class="r"><div class="muted sm" style="width:18px">2</div><div class="av" style="background:#7c3aed">LG</div><div class="g">Louis <span class="tag">Du</span><div class="muted sm num">1 Buy-in</div></div><span class="muted num">20 €</span><span class="pill on" style="background:var(--soft);color:#c4b5fd">+20</span></div>
+          <div class="r"><div class="muted sm" style="width:18px">3</div><div class="av guest">LW</div><div class="g">Lena<div class="muted sm num">2 Buy-ins</div></div><span class="muted num">40 €</span><span class="pill on" style="background:var(--soft);color:#c4b5fd">+20</span></div>
+          <div class="r"><div class="muted sm" style="width:18px">4</div><div class="av" style="background:#0d9488">MK</div><div class="g">Max<div class="muted sm num">2 Buy-ins</div></div><span class="muted num">40 €</span><span class="pill on" style="background:var(--soft);color:#c4b5fd">+20</span></div>
+          <div class="muted sm" style="margin-top:6px">Zahl links = Sitzplatz aus der Auslosung</div>
+        </div>
+        <div class="dock"><div class="it"><i></i>Übersicht</div><div class="plus">+</div><div class="it on"><i></i>Live</div></div>
+      </div>
+      <div class="cap"><b>Live, läuft.</b> Spieler in Sitzreihenfolge.</div>
+    </div>
+    <div>
+      <div class="phone"><div class="status"><span>21:14</span><span>●●● 82%</span></div>
+        <div class="body">
+          <div class="top"><span class="grp">Titanom ▾</span><div class="me">LG</div></div>
+          <div class="hero" style="height:220px"></div>
+        </div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="mi" style="flex-direction:column;align-items:flex-start;gap:2px"><b>Louis</b><span class="muted sm">louis@titanom.com</span></div>
+          <div class="mi"><span>Gruppen</span><span class="muted">2 ›</span></div>
+          <div class="mi"><span>Freunde einladen</span><span class="muted">›</span></div>
+          <div class="mi"><span>Name ändern</span><span class="muted">›</span></div>
+          <div class="mi" style="color:var(--neg)">Ausloggen</div>
+        </div>
+        <div class="dock"><div class="it on"><i></i>Übersicht</div><div class="plus">+</div><div class="it"><i></i>Live</div></div>
+      </div>
+      <div class="cap"><b>Profil-Menü</b> über dem Inhalt, kein eigener Tab.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. Neues Spiel ============ -->
+<section>
+  <h2>3 · Neues Spiel: Accounts und Gäste</h2>
+  <p>Zwei Wege, den Unterschied sichtbar zu machen.</p>
+  <div class="row">
+    <div>
+      <div class="phone"><div class="status"><span>19:30</span><span>●●● 88%</span></div>
+        <div class="body">
+          <div class="top"><span class="t">Neues Spiel</span><span class="muted">✕</span></div>
+          <div class="r" style="justify-content:space-between"><span class="muted">Buy-in</span><b class="num">20 €</b></div>
+          <div class="h"><span>Mit Account</span><span class="muted sm">verknüpft, sehen ihre Stats</span></div>
+          <div class="r"><div class="av" style="background:#7c3aed">LG<span class="badge"></span></div><div class="g">Louis <span class="tag">Du</span></div><span class="check on">✓</span></div>
+          <div class="r"><div class="av" style="background:#0d9488">MK<span class="badge"></span></div><div class="g">Max</div><span class="check on">✓</span></div>
+          <div class="r"><div class="av" style="background:#db2777">TB<span class="badge"></span></div><div class="g">Tim</div><span class="check on">✓</span></div>
+          <div class="h"><span>Gäste</span><span class="muted sm">nur Name, später übernehmbar</span></div>
+          <div class="r"><div class="av guest">LW</div><div class="g">Lena</div><span class="check on">✓</span></div>
+          <div class="r"><div class="av guest">JS</div><div class="g">Jonas</div><span class="check"></span></div>
+          <div class="r" style="border:1.5px dashed rgba(255,255,255,.15);background:none"><div class="av guest">+</div><div class="g muted">Gast hinzufügen</div></div>
+        </div>
+        <div class="foot"><div class="btn">Weiter · Plätze auslosen</div></div>
+      </div>
+      <div class="cap"><b>A · Zwei Gruppen.</b> Accounts mit grünem Punkt, Gäste mit gestricheltem Rand.</div>
+    </div>
+    <div>
+      <div class="phone"><div class="status"><span>19:30</span><span>●●● 88%</span></div>
+        <div class="body">
+          <div class="top"><span class="t">Wer spielt?</span><span class="muted num">4 · 80 €</span></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px">
+            <div class="r" style="flex-direction:column;gap:6px;padding:14px 6px;outline:2px solid var(--accent)"><div class="av" style="background:#7c3aed;width:46px;height:46px">LG<span class="badge"></span></div><span>Louis</span><span class="tag acc" style="margin:0">Account</span></div>
+            <div class="r" style="flex-direction:column;gap:6px;padding:14px 6px;outline:2px solid var(--accent)"><div class="av" style="background:#0d9488;width:46px;height:46px">MK<span class="badge"></span></div><span>Max</span><span class="tag acc" style="margin:0">Account</span></div>
+            <div class="r" style="flex-direction:column;gap:6px;padding:14px 6px;outline:2px solid var(--accent)"><div class="av" style="background:#db2777;width:46px;height:46px">TB<span class="badge"></span></div><span>Tim</span><span class="tag acc" style="margin:0">Account</span></div>
+            <div class="r" style="flex-direction:column;gap:6px;padding:14px 6px;outline:2px solid var(--accent)"><div class="av guest" style="width:46px;height:46px">LW</div><span>Lena</span><span class="tag" style="margin:0">Gast</span></div>
+            <div class="r" style="flex-direction:column;gap:6px;padding:14px 6px;opacity:.5"><div class="av guest" style="width:46px;height:46px">JS</div><span>Jonas</span><span class="tag" style="margin:0">Gast</span></div>
+            <div class="r" style="flex-direction:column;gap:6px;padding:14px 6px;background:none;border:1.5px dashed rgba(255,255,255,.15)"><div class="av guest" style="width:46px;height:46px">+</div><span class="muted">Gast</span></div>
+          </div>
+          <div class="r" style="margin-top:12px;background:var(--soft)"><div class="g sm">Lena hat noch keinen Account. <b>Einladung teilen</b>, dann übernimmt sie ihre Historie.</div></div>
+        </div>
+        <div class="foot"><div class="btn">Plätze auslosen</div></div>
+      </div>
+      <div class="cap"><b>B · Kachel-Raster.</b> Schneller antippen, Label Account/Gast, Hinweis zum Einladen.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. Seating ============ -->
+<section>
+  <h2>4 · Sitzplätze auslosen</h2>
+  <p>Nach dem Auswählen, vor dem Start. Neu auslosen bis es passt, dann starten.</p>
+  <div class="row">
+    <div>
+      <div class="phone"><div class="status"><span>19:31</span><span>●●● 88%</span></div>
+        <div class="body">
+          <div class="top"><span class="t">Sitzplätze</span><span class="muted">✕</span></div>
+          <div class="table" id="tbl"></div>
+        </div>
+        <div class="foot"><div class="btn ghost">🎲 Neu</div><div class="btn" style="flex:2">Spiel starten</div></div>
+      </div>
+      <div class="cap"><b>A · Tisch von oben.</b> Ovaler Tisch, Plätze im Uhrzeigersinn, Dealer-Button zufällig.</div>
+    </div>
+    <div>
+      <div class="phone"><div class="status"><span>19:31</span><span>●●● 88%</span></div>
+        <div class="body">
+          <div class="top"><span class="t">Sitzplätze</span><span class="muted">✕</span></div>
+          <div class="hero" style="text-align:center"><div class="muted sm">Ausgelost</div><div style="font-size:22px;font-weight:800">Tim gibt zuerst</div><div class="muted sm">Danach im Uhrzeigersinn</div></div>
+          <div class="r"><b class="num" style="width:22px;font-size:18px">1</b><div class="av" style="background:#db2777">TB<span class="badge"></span></div><div class="g">Tim</div><span class="dealer" style="position:static">D</span></div>
+          <div class="r"><b class="num" style="width:22px;font-size:18px">2</b><div class="av guest">LW</div><div class="g">Lena</div></div>
+          <div class="r"><b class="num" style="width:22px;font-size:18px">3</b><div class="av" style="background:#7c3aed">LG<span class="badge"></span></div><div class="g">Louis</div></div>
+          <div class="r"><b class="num" style="width:22px;font-size:18px">4</b><div class="av" style="background:#0d9488">MK<span class="badge"></span></div><div class="g">Max</div></div>
+          <div class="r"><b class="num" style="width:22px;font-size:18px">5</b><div class="av guest">JS</div><div class="g">Jonas</div></div>
+        </div>
+        <div class="foot"><div class="btn ghost">🎲 Neu</div><div class="btn" style="flex:2">Spiel starten</div></div>
+      </div>
+      <div class="cap"><b>B · Nummerierte Liste.</b> Schlichter, gut lesbar wenn viele mitspielen.</div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Cumulative results over 12 games, shared by all chart variants.
+  const nets = [12, -20, 35, -8, 50, -15, 22, -30, 40, 18, -5, 25];
+  let acc = 0; const cum = nets.map(n => (acc += n));
+  const min = Math.min(0, ...cum), max = Math.max(...cum);
+  const ns = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+
+  document.querySelectorAll('svg.chart').forEach(svg => {
+    const [, , W, H] = svg.getAttribute('viewBox').split(' ').map(Number);
+    const pad = 8, y = v => pad + (H - 2 * pad) * (1 - (v - min) / (max - min));
+    const x = i => (W * i) / (cum.length - 1);
+    const pts = cum.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+    const kind = svg.dataset.kind;
+    svg.appendChild(el('line', { x1: 0, x2: W, y1: y(0), y2: y(0), stroke: 'rgba(255,255,255,.18)', 'stroke-dasharray': '3 4' }));
+
+    if (kind === 'area') {
+      const defs = el('defs', {}); const g = el('linearGradient', { id: 'ga', x1: 0, x2: 0, y1: 0, y2: 1 });
+      g.appendChild(el('stop', { offset: '0', 'stop-color': '#5eead4', 'stop-opacity': '.35' }));
+      g.appendChild(el('stop', { offset: '1', 'stop-color': '#5eead4', 'stop-opacity': '0' }));
+      defs.appendChild(g); svg.appendChild(defs);
+      svg.appendChild(el('polygon', { points: `0,${H} ${pts} ${W},${H}`, fill: 'url(#ga)' }));
+      svg.appendChild(el('polyline', { points: pts, fill: 'none', stroke: '#5eead4', 'stroke-width': 2.5, 'stroke-linejoin': 'round' }));
+      svg.appendChild(el('circle', { cx: x(cum.length - 1) - 3, cy: y(cum.at(-1)), r: 4, fill: '#5eead4' }));
+    }
+    if (kind === 'line') {
+      // Green above zero, red below, via clip paths split at the zero line.
+      const defs = el('defs', {});
+      const up = el('clipPath', { id: 'up' }); up.appendChild(el('rect', { x: 0, y: 0, width: W, height: y(0) }));
+      const dn = el('clipPath', { id: 'dn' }); dn.appendChild(el('rect', { x: 0, y: y(0), width: W, height: H }));
+      defs.append(up, dn); svg.appendChild(defs);
+      svg.appendChild(el('polyline', { points: pts, fill: 'none', stroke: '#5eead4', 'stroke-width': 2, 'clip-path': 'url(#up)' }));
+      svg.appendChild(el('polyline', { points: pts, fill: 'none', stroke: '#fb7185', 'stroke-width': 2, 'clip-path': 'url(#dn)' }));
+      cum.forEach((v, i) => svg.appendChild(el('circle', { cx: x(i), cy: y(v), r: 2.5, fill: v >= 0 ? '#5eead4' : '#fb7185' })));
+      [0, 4, 8, 11].forEach(i => { const t = el('text', { x: Math.min(x(i), W - 24), y: H - 1, fill: 'rgba(255,255,255,.35)', 'font-size': 9 }); t.textContent = ['Jan', 'Apr', 'Jul', 'Okt'][[0, 4, 8, 11].indexOf(i)]; svg.appendChild(t); });
+    }
+    if (kind === 'bars') {
+      const bmax = Math.max(...nets.map(Math.abs)), mid = H / 2, bw = W / nets.length - 6;
+      svg.firstChild.setAttribute('y1', mid); svg.firstChild.setAttribute('y2', mid);
+      nets.forEach((n, i) => {
+        const h = (Math.abs(n) / bmax) * (H / 2 - 10);
+        svg.appendChild(el('rect', { x: i * (W / nets.length) + 3, y: n > 0 ? mid - h : mid, width: bw, height: h, rx: 3, fill: n > 0 ? 'rgba(94,234,212,.55)' : 'rgba(251,113,133,.55)' }));
+      });
+      const ly = v => 10 + (H - 20) * (1 - (v - min) / (max - min));
+      svg.appendChild(el('polyline', { points: cum.map((v, i) => `${i * (W / nets.length) + 3 + bw / 2},${ly(v)}`).join(' '), fill: 'none', stroke: '#c4b5fd', 'stroke-width': 2 }));
+    }
+  });
+
+  // Seating table: seats on an ellipse, clockwise from top.
+  const players = [['Tim', '#db2777', 1], ['Lena', null, 0], ['Louis', '#7c3aed', 1], ['Max', '#0d9488', 1], ['Jonas', null, 0], ['Anna', '#ca8a04', 1]];
+  const tbl = document.getElementById('tbl');
+  tbl.insertAdjacentHTML('beforeend', '<div class="felt"><div><div style="font-size:30px">🎲</div><div class="muted sm">6 Plätze<br/>ausgelost</div></div></div>');
+  players.forEach(([name, color, acc], i) => {
+    const a = -Math.PI / 2 + (2 * Math.PI * i) / players.length;
+    const cx = 150 + Math.cos(a) * 128, cy = 210 + Math.sin(a) * 196;
+    const init = name.slice(0, 2).toUpperCase();
+    tbl.insertAdjacentHTML('beforeend', `<div class="seat" style="left:${cx - 35}px;top:${cy - 28}px">
+      <div class="av ${acc ? '' : 'guest'}" style="${color ? `background:${color}` : ''};width:42px;height:42px">${init}${acc ? '<span class="badge"></span>' : ''}</div>
+      <span>${name}</span><span class="n">Platz ${i + 1}</span></div>`);
+    if (i === 0) tbl.insertAdjacentHTML('beforeend', `<div class="dealer" style="left:${cx + 18}px;top:${cy + 8}px">D</div>`);
+  });
+</script>
+</body>
+</html>

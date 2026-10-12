@@ -45,13 +45,17 @@ export const game = pgTable(
   (t) => [index().on(t.groupId)],
 );
 
-/** A member sitting at a game. `cashOutCents` is their final chip count (null while still playing). */
+/**
+ * A member sitting at a game. `position` is the drawn seat (1 = first dealer, then clockwise);
+ * `cashOutCents` is their final chip count (null while still playing).
+ */
 export const seat = pgTable(
   "seat",
   {
     id: uuid().primaryKey().defaultRandom(),
     gameId: uuid().notNull().references(() => game.id, { onDelete: "cascade" }),
     memberId: uuid().notNull().references(() => member.id, { onDelete: "cascade" }),
+    position: integer().notNull().default(0),
     cashOutCents: integer(),
   },
   (t) => [uniqueIndex().on(t.gameId, t.memberId)],

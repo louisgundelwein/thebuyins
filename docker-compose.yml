@@ -3,9 +3,9 @@ services:
   db:
     image: postgres:18
     environment:
-      POSTGRES_USER: homegame
-      POSTGRES_PASSWORD: homegame
-      POSTGRES_DB: homegame
+      POSTGRES_USER: thebuyins
+      POSTGRES_PASSWORD: thebuyins
+      POSTGRES_DB: thebuyins
     ports: ["5447:5432"]
     volumes: [pgdata:/var/lib/postgresql]
 volumes:
