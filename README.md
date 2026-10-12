@@ -18,3 +18,11 @@ pnpm dev:app                                 # Expo, "w" für Web
 ```
 
 Am Handy: `EXPO_PUBLIC_API_URL=http://<LAN-IP>:3000` setzen. Magic Links werden lokal im Server-Log ausgegeben.
+
+## Android (Emulator)
+
+```sh
+export ANDROID_HOME=~/Android/Sdk JAVA_HOME=<JDK 17>
+pnpm --filter @homegame/app android        # nativer Build + Installation
+adb reverse tcp:3000 tcp:3000              # API im Emulator unter localhost
+```
