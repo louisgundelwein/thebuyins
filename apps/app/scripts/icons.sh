@@ -35,3 +35,8 @@ render android-icon-foreground.png "$(chip 'url(#vt)' '#0c0b12' 0.85)" 1024
 render android-icon-monochrome.png "<mask id=\"m\"><rect width=\"1024\" height=\"1024\"/>$(chip '#fff' '#000' 0.85)</mask><rect width=\"1024\" height=\"1024\" fill=\"#fff\" mask=\"url(#m)\"/>" 1024
 # Splash: transparent chip on the splash background colour from app.json.
 render splash-icon.png "$(chip 'url(#vt)' '#0c0b12' 1.5)" 1024
+# Google Play listing: hi-res icon and feature graphic (motif only, no text).
+mkdir -p ../../../../store/graphics
+render ../../../../store/graphics/play-icon-512.png "$BG$(chip 'url(#vt)' '#0c0b12' 1)" 512
+echo "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1024 500\">$DEFS<rect width=\"1024\" height=\"500\" fill=\"#0c0b12\"/><rect width=\"1024\" height=\"500\" fill=\"url(#bg)\"/><g transform=\"translate(256 -6) scale(0.5)\">$(chip 'url(#vt)' '#0c0b12' 1)</g></svg>" \
+  | rsvg-convert -w 1024 -h 500 -o ../../../../store/graphics/play-feature-1024x500.png
