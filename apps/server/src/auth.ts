@@ -13,14 +13,6 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   database: drizzleAdapter(db, { provider: "pg", schema }),
   emailAndPassword: { enabled: true },
-  socialProviders: {
-    ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-      ? { google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } }
-      : {}),
-    ...(env.APPLE_CLIENT_ID && env.APPLE_CLIENT_SECRET
-      ? { apple: { clientId: env.APPLE_CLIENT_ID, clientSecret: env.APPLE_CLIENT_SECRET } }
-      : {}),
-  },
   plugins: [
     expo(),
     magicLink({
@@ -32,7 +24,6 @@ export const auth = betterAuth({
   ],
   trustedOrigins: [
     "homegame://",
-    "https://appleid.apple.com",
     ...webOrigins,
     ...(env.NODE_ENV === "production" ? [] : ["exp://**"]),
   ],
