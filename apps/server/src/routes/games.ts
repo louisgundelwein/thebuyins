@@ -6,7 +6,7 @@ import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../db";
 import { buyIn, game, member, seat } from "../db/schema/poker";
-import { membershipOf, requireUser, type AppEnv } from "../middleware";
+import { adminOf, membershipOf, requireUser, type AppEnv } from "../middleware";
 import { loadGame } from "../stats";
 
 /** Loads a game the caller may see. With `live`, also rejects edits to finished games. */
@@ -32,6 +32,14 @@ export const gameRoutes = new Hono<AppEnv>()
 
   .get("/games/:gameId", zValidator("param", gameParam), async (c) => {
     return c.json(await gameFor(c.var.user.id, c.req.valid("param").gameId));
+  })
+
+  /** Deletes a game with its seats and buy-ins, live or finished. Group admins only. */
+  .delete("/games/:gameId", zValidator("param", gameParam), async (c) => {
+    const state = await gameFor(c.var.user.id, c.req.valid("param").gameId);
+    await adminOf(c.var.user.id, state.game.groupId);
+    await db.delete(game).where(eq(game.id, state.game.id));
+    return c.json({ ok: true });
   })
 
   /** Seats a group member who arrives late, in the next free position, with the standard buy-in. */

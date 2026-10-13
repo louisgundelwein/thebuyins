@@ -1,11 +1,11 @@
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, exists, getTableColumns, inArray, isNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../db";
 import { buyIn, game, group, member, seat } from "../db/schema/poker";
-import { membershipOf, requireUser, type AppEnv } from "../middleware";
+import { adminOf, membershipOf, requireUser, type AppEnv } from "../middleware";
 import { finishedResults, historyOf, leaderboard } from "../stats";
 
 const cents = z.number().int().positive();
@@ -50,7 +50,7 @@ export const groupRoutes = new Hono<AppEnv>()
     },
   )
 
-  /** Group page: members, games, standings (`season` is a year or "all") and the caller's game history. */
+  /** Group page: members (`played` = has sat at a game), games, standings (`season` is a year or "all") and the caller's game history. */
   .get(
     "/groups/:groupId",
     zValidator("query", z.object({ season: z.union([z.literal("all"), z.coerce.number().int()]).default("all") })),
@@ -61,7 +61,14 @@ export const groupRoutes = new Hono<AppEnv>()
 
       const [g, members, games, results] = await Promise.all([
         db.query.group.findFirst({ where: eq(group.id, groupId) }),
-        db.select().from(member).where(eq(member.groupId, groupId)).orderBy(member.displayName),
+        db
+          .select({
+            ...getTableColumns(member),
+            played: sql<boolean>`${exists(db.select({ id: seat.id }).from(seat).where(eq(seat.memberId, member.id)))}`,
+          })
+          .from(member)
+          .where(eq(member.groupId, groupId))
+          .orderBy(member.displayName),
         db.select().from(game).where(eq(game.groupId, groupId)).orderBy(desc(game.startedAt)),
         finishedResults(groupId),
       ]);
@@ -80,6 +87,34 @@ export const groupRoutes = new Hono<AppEnv>()
       await membershipOf(c.var.user.id, groupId);
       const [m] = await db.insert(member).values({ groupId, displayName: c.req.valid("json").displayName }).returning();
       return c.json(m, 201);
+    },
+  )
+
+  /**
+   * Admin removes a member. Members who played keep their results: the account becomes a guest
+   * under the same name, which can be claimed again via invite. Guests who played can't be removed,
+   * since that would drop their results. Admins can't remove themselves.
+   */
+  .delete(
+    "/groups/:groupId/members/:memberId",
+    zValidator("param", z.object({ groupId: z.uuid(), memberId: z.uuid() })),
+    async (c) => {
+      const { groupId, memberId } = c.req.valid("param");
+      const me = await adminOf(c.var.user.id, groupId);
+      if (me.id === memberId) throw new HTTPException(409, { message: "Du kannst dich nicht selbst entfernen" });
+
+      const target = await db.query.member.findFirst({ where: and(eq(member.id, memberId), eq(member.groupId, groupId)) });
+      if (!target) throw new HTTPException(404, { message: "Mitglied nicht gefunden" });
+
+      const [played] = await db.select({ id: seat.id }).from(seat).where(eq(seat.memberId, memberId)).limit(1);
+      if (!played) {
+        await db.delete(member).where(eq(member.id, memberId));
+      } else if (!target.userId) {
+        throw new HTTPException(409, { message: "Gast hat schon gespielt" });
+      } else {
+        await db.update(member).set({ userId: null, role: "member" }).where(eq(member.id, memberId));
+      }
+      return c.json({ ok: true });
     },
   )
 

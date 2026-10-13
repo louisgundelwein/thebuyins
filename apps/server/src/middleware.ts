@@ -25,3 +25,10 @@ export async function membershipOf(userId: string, groupId: string) {
   if (!row) throw new HTTPException(404, { message: "Gruppe nicht gefunden" });
   return row;
 }
+
+/** Like `membershipOf`, but only group admins pass; other members get 403. */
+export async function adminOf(userId: string, groupId: string) {
+  const me = await membershipOf(userId, groupId);
+  if (me.role !== "admin") throw new HTTPException(403, { message: "Nur Admins dürfen das" });
+  return me;
+}
