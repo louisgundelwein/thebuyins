@@ -1,3 +1,5 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
 import { parseResponse } from "hono/client";
 import { useState, type ReactNode } from "react";
 import { Pressable, Share, View } from "react-native";
@@ -6,7 +8,7 @@ import { api, type GameState } from "@/lib/api";
 import { authClient } from "@/lib/auth";
 import { t, locale } from "@/lib/i18n";
 import { money, parseCents, signedMoney } from "@/lib/money";
-import { useGame, useGameMutation, useGroup } from "@/lib/queries";
+import { keys, useGame, useGameMutation, useGroup } from "@/lib/queries";
 import { c } from "@/lib/theme";
 
 /** Where a game is shown: its own route (below a back header) or the Live tab (own top bar, above the dock). */
@@ -122,7 +124,42 @@ function Table({ state, frame, onSettle }: { state: GameState; frame: Frame; onS
         </Row>
       ))}
       {[rebuy, undo, seatMember].map((m, i) => (m.isError ? <Notice key={i}>{m.error.message}</Notice> : null))}
+      <DeleteGame state={state} frame={frame} />
     </Screen>
+  );
+}
+
+/** Admin-only: deletes the game and its buy-ins after confirmation. Renders nothing for other members. */
+function DeleteGame({ state, frame }: { state: GameState; frame: Frame }) {
+  const qc = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const { game } = state;
+  const isAdmin = useGroup(game.groupId).data?.me.role === "admin";
+  const remove = useMutation({
+    mutationFn: () => parseResponse(api.games[":gameId"].$delete({ param: { gameId: game.id } })),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: keys.game(game.id) });
+      void qc.invalidateQueries({ queryKey: ["group", game.groupId] });
+      if (frame.dock) return;
+      if (router.canGoBack()) router.back();
+      else router.replace("/");
+    },
+  });
+
+  if (!isAdmin) return null;
+  return (
+    <>
+      {confirming ? (
+        <>
+          <Notice>{t.game.deleteText}</Notice>
+          <Button title={t.game.deletePermanently} onPress={() => remove.mutate()} loading={remove.isPending} />
+          <Button title={t.common.cancel} variant="ghost" onPress={() => setConfirming(false)} />
+        </>
+      ) : (
+        <Button title={t.game.deleteGame} variant="ghost" onPress={() => setConfirming(true)} />
+      )}
+      {remove.isError && <Notice>{remove.error.message}</Notice>}
+    </>
   );
 }
 
@@ -191,6 +228,7 @@ function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBa
       )}
       {cashOut.isError && <Notice>{cashOut.error.message}</Notice>}
       {finish.isError && <Notice>{finish.error.message}</Notice>}
+      <DeleteGame state={state} frame={frame} />
     </Screen>
   );
 }
@@ -244,6 +282,7 @@ function Result({ state, frame }: { state: GameState; frame: Frame }) {
           {transfers.map((tr) => <Transfer key={`${tr.from}-${tr.to}`} from={tr.from} to={tr.to} cents={tr.amountCents} nameOf={nameOf} />)}
         </>
       )}
+      <DeleteGame state={state} frame={frame} />
     </Screen>
   );
 }

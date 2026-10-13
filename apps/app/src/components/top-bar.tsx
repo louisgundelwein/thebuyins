@@ -25,7 +25,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
   const user = session?.user;
   const current = groups.data?.find((g) => g.id === groupId);
   const close = () => setMenu(null);
-  const go = (href: "/group/new" | "/join" | "/account") => {
+  const go = (href: "/group/new" | "/group/members" | "/join" | "/account") => {
     close();
     router.push(href);
   };
@@ -62,6 +62,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
         ))}
         <Item onPress={() => go("/group/new")} right="+">{t.topBar.newGroup}</Item>
         <Item onPress={() => go("/join")} right="›">{t.topBar.join}</Item>
+        {page.data?.me.role === "admin" && <Item onPress={() => go("/group/members")} right="›">{t.topBar.members}</Item>}
       </Sheet>
 
       <Sheet open={menu === "profile"} onClose={close} side="right">
