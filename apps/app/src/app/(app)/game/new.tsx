@@ -4,10 +4,11 @@ import { parseResponse } from "hono/client";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { SeatingTable } from "@/components/seating-table";
-import { Avatar, Button, Chip, Field, Loading, Notice, Screen, T } from "@/components/ui";
+import { Avatar, Button, Chip, Field, Loading, Notice, PAGE_TOP, Screen, T } from "@/components/ui";
 import { api } from "@/lib/api";
 import { shareInvite } from "@/lib/invite";
-import { money, parseCents } from "@/lib/money";
+import { useLanguage } from "@/lib/language";
+import { parseCents } from "@/lib/money";
 import { useGroup } from "@/lib/queries";
 import { c } from "@/lib/theme";
 
@@ -25,19 +26,16 @@ function shuffle<T>(items: readonly T[]): T[] {
 const chunk = <T,>(items: readonly T[], size: number) =>
   Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, i * size + size));
 
-/** "Lena", "Lena und Jonas", "Lena, Jonas und Tim". */
-const listNames = (names: readonly string[]) =>
-  names.length > 1 ? `${names.slice(0, -1).join(", ")} und ${names.at(-1)}` : (names[0] ?? "");
-
 /**
  * Two steps: pick who's playing (adding guests on the fly), then draw seats around the table.
  * Starting sends the drawn order; the server seats players in that order and seat 1 deals first.
  */
 export default function NewGame() {
+  const { t, locale, money } = useLanguage();
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const page = useGroup(groupId);
   const qc = useQueryClient();
-  const [title, setTitle] = useState(() => `${new Date().toLocaleDateString("de-DE", { weekday: "long" })}abend`);
+  const [title, setTitle] = useState(() => t.newGame.defaultTitle(new Date().toLocaleDateString(locale, { weekday: "long" })));
   const [buyIn, setBuyIn] = useState<string>();
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [guest, setGuest] = useState<string>();
@@ -66,7 +64,7 @@ export default function NewGame() {
   if (!page.data) return <Loading />;
   const { group, me, members } = page.data;
   const cents = parseCents(buyIn ?? String(group.defaultBuyInCents / 100));
-  const byName = (a: { displayName: string }, b: { displayName: string }) => a.displayName.localeCompare(b.displayName, "de");
+  const byName = (a: { displayName: string }, b: { displayName: string }) => a.displayName.localeCompare(b.displayName, locale);
   const sorted = [
     ...members.filter((m) => m.id === me.id),
     ...members.filter((m) => m.id !== me.id && m.userId !== null).sort(byName),
@@ -87,11 +85,11 @@ export default function NewGame() {
         footer={
           <View style={s.footer}>
             <View style={{ flex: 1 }}>
-              <Button title="Neu auslosen" variant="ghost" onPress={() => setOrder(shuffle(order))} />
+              <Button title={t.newGame.redraw} variant="ghost" onPress={() => setOrder(shuffle(order))} />
             </View>
             <View style={{ flex: 2 }}>
               <Button
-                title="Spiel starten"
+                title={t.newGame.start}
                 loading={start.isPending}
                 onPress={() => start.mutate({ buyInCents: cents, memberIds: [...order] })}
               />
@@ -100,8 +98,8 @@ export default function NewGame() {
         }
       >
         <View style={s.top}>
-          <T size={22} weight="800">Sitzplätze</T>
-          <Chip title="Zurück" onPress={() => setOrder(undefined)} />
+          <T size={22} weight="800">{t.newGame.seats}</T>
+          <Chip title={t.common.back} onPress={() => setOrder(undefined)} />
         </View>
         <SeatingTable seats={seats} />
         {start.isError && <Notice>{start.error.message}</Notice>}
@@ -122,26 +120,26 @@ export default function NewGame() {
     <Screen
       footer={
         <Button
-          title="Plätze auslosen"
+          title={t.newGame.draw}
           disabled={selected.size < 2 || !cents || !title.trim()}
           onPress={() => setOrder(shuffle(sorted.filter((m) => selected.has(m.id)).map((m) => m.id)))}
         />
       }
     >
       <View style={s.top}>
-        <T size={22} weight="800">Wer spielt?</T>
+        <T size={22} weight="800">{t.newGame.whoPlays}</T>
         <T tone="muted">{selected.size} · {cents ? money(selected.size * cents) : "?"}</T>
       </View>
       <View style={s.fields}>
         <View style={{ flex: 2 }}>
-          <Field value={title} onChangeText={setTitle} placeholder="Titel" />
+          <Field value={title} onChangeText={setTitle} placeholder={t.newGame.title} />
         </View>
         <View style={{ flex: 1 }}>
           <Field
             value={buyIn ?? String(group.defaultBuyInCents / 100)}
             onChangeText={setBuyIn}
             keyboardType="decimal-pad"
-            placeholder="Buy-in €"
+            placeholder={t.newGame.buyIn}
           />
         </View>
       </View>
@@ -153,22 +151,37 @@ export default function NewGame() {
             const m = sorted.find((x) => x.id === id);
             if (id === "add")
               return (
-                <Pressable key="add" style={[s.tile, s.addTile]} onPress={() => setGuest((g) => (g === undefined ? "" : undefined))}>
+                <Pressable
+                  key="add"
+                  style={[s.tile, s.addTile]}
+                  onPress={() => setGuest((g) => (g === undefined ? "" : undefined))}
+                  accessibilityRole="button"
+                  accessibilityLabel={t.newGame.addGuest}
+                >
                   <Avatar id="add" name="+" guest size={46} />
-                  <T tone="muted">Gast</T>
+                  <T tone="muted">{t.common.guest}</T>
+                  <View style={s.tagSpacer} />
                 </Pressable>
               );
             if (!m) return <View key={`empty-${col}`} style={{ flex: 1 }} />;
             const on = selected.has(m.id);
             const isMe = m.id === me.id;
             const isGuest = m.userId === null;
+            const tag = isMe ? t.common.you : isGuest ? t.common.guest : t.common.account;
             return (
-              <Pressable key={m.id} style={[s.tile, on ? s.tileOn : s.tileOff]} onPress={() => toggle(m.id)}>
+              <Pressable
+                key={m.id}
+                style={[s.tile, on ? s.tileOn : s.tileOff]}
+                onPress={() => toggle(m.id)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: on }}
+                accessibilityLabel={`${m.displayName}, ${tag}`}
+              >
                 <Avatar id={m.id} name={m.displayName} guest={isGuest} size={46} />
                 <T numberOfLines={1}>{m.displayName}</T>
                 <View style={[s.tag, !isGuest && s.tagAccount]}>
                   <T size={10} weight="600" style={{ color: isGuest ? c.muted : c.pos }}>
-                    {isMe ? "Du" : isGuest ? "Gast" : "Account"}
+                    {tag}
                   </T>
                 </View>
               </Pressable>
@@ -180,25 +193,25 @@ export default function NewGame() {
       {guest !== undefined && (
         <View style={s.fields}>
           <View style={{ flex: 1 }}>
-            <Field value={guest} onChangeText={setGuest} placeholder="Name" autoFocus onSubmitEditing={submitGuest} />
+            <Field value={guest} onChangeText={setGuest} placeholder={t.common.name} autoFocus onSubmitEditing={submitGuest} />
           </View>
-          <Chip title={addGuest.isPending ? "…" : "Hinzufügen"} onPress={submitGuest} />
+          <Chip title={addGuest.isPending ? "…" : t.common.add} onPress={submitGuest} />
         </View>
       )}
 
       {guestNames.length > 0 && (
         <View style={s.hint}>
           <T size={13}>
-            {listNames(guestNames)} {guestNames.length > 1 ? "haben" : "hat"} noch keinen Account.{" "}
+            {t.newGame.guestsNoAccount(t.common.names(guestNames), guestNames.length > 1)}{" "}
             <T
               size={13}
               weight="700"
               style={{ color: "#c4b5fd" }}
-              onPress={() => void shareInvite(group).then((r) => setCopied(r === "copied"))}
+              onPress={() => void shareInvite(group, t).then((r) => setCopied(r === "copied"))}
             >
-              {copied ? "Link kopiert" : "Einladung teilen"}
+              {copied ? t.newGame.linkCopied : t.newGame.shareInvite}
             </T>
-            , dann {guestNames.length > 1 ? "übernehmen sie" : "übernimmt die Person"} die Historie.
+            , {t.newGame.takeOver(guestNames.length > 1)}
           </T>
         </View>
       )}
@@ -208,15 +221,16 @@ export default function NewGame() {
 }
 
 const s = StyleSheet.create({
-  top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 48, marginBottom: 2 },
+  top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: PAGE_TOP + 16, marginBottom: 2 },
   fields: { flexDirection: "row", gap: 8, alignItems: "center" },
   footer: { flexDirection: "row", gap: 10 },
   gridRow: { flexDirection: "row", gap: 10 },
   tile: { flex: 1, alignItems: "center", gap: 6, paddingVertical: 14, paddingHorizontal: 6, borderRadius: 18, borderWidth: 2 },
   tileOn: { backgroundColor: "rgba(255,255,255,0.04)", borderColor: c.accent },
-  tileOff: { backgroundColor: "rgba(255,255,255,0.04)", borderColor: "transparent", opacity: 0.5 },
+  tileOff: { backgroundColor: "rgba(255,255,255,0.04)", borderColor: "transparent" },
   addTile: { borderWidth: 1.5, borderStyle: "dashed", borderColor: "rgba(255,255,255,0.15)" },
   tag: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, backgroundColor: c.faint },
   tagAccount: { backgroundColor: "rgba(94,234,212,0.14)" },
+  tagSpacer: { height: 18 },
   hint: { borderRadius: 18, padding: 12, backgroundColor: c.accentSoft, marginTop: 2 },
 });

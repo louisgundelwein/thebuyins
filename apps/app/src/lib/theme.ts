@@ -17,6 +17,16 @@ export const c = {
 
 export const radius = { tile: 20, row: 18, hero: 28, pill: 999 } as const;
 
+/** Transparent native header for pushed screens. Titles below it start at `PAGE_TOP`. */
+export const stackHeader = {
+  headerShown: true,
+  headerTransparent: true,
+  headerTitle: "",
+  headerTintColor: c.text,
+  headerBackButtonDisplayMode: "minimal",
+  contentStyle: { backgroundColor: c.bg },
+} as const;
+
 /** Stable avatar colour per member. */
 const AVATAR = ["#7c3aed", "#0d9488", "#db2777", "#ca8a04", "#2563eb", "#ea580c", "#16a34a", "#9333ea"];
 export function avatarColor(id: string) {

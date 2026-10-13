@@ -1,4 +1,4 @@
-import { index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { index, integer, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 export const memberRole = pgEnum("member_role", ["admin", "member"]);
@@ -16,6 +16,8 @@ export const group = pgTable("group", {
 /**
  * A person in a group. `userId` is null for guests that were added by name;
  * a guest is claimed when that person signs up and joins the group.
+ * `leftAt` is set when an account leaves or is removed: the row stays so their results still
+ * add up, and joining again clears it.
  */
 export const member = pgTable(
   "member",
@@ -26,6 +28,7 @@ export const member = pgTable(
     displayName: text().notNull(),
     role: memberRole().notNull().default("member"),
     createdAt: timestamp().notNull().defaultNow(),
+    leftAt: timestamp(),
   },
   (t) => [uniqueIndex().on(t.groupId, t.userId), index().on(t.userId)],
 );
@@ -72,4 +75,14 @@ export const buyIn = pgTable(
     createdAt: timestamp().notNull().defaultNow(),
   },
   (t) => [index().on(t.seatId)],
+);
+
+/** Finished games a user removed from their own history. Only that user stops seeing them. */
+export const hiddenGame = pgTable(
+  "hidden_game",
+  {
+    userId: text().notNull().references(() => user.id, { onDelete: "cascade" }),
+    gameId: uuid().notNull().references(() => game.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
 );

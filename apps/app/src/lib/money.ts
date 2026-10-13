@@ -1,10 +1,10 @@
-const eur = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 2, minimumFractionDigits: 0 });
+/** Formats in a locale tag: 2050 → "20,50 €" (de-DE) or "€20.50" (en-US), 2000 → "20 €" / "€20". Components use `useLanguage().money`. */
+export const formatMoney = (cents: number, locale: string) =>
+  new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(cents / 100);
 
-/** 2050 → "20,50 €", 2000 → "20 €". */
-export const money = (cents: number) => eur.format(cents / 100);
-
-/** Like `money` but always signed, for results: "+12 €", "−3,50 €". */
-export const signedMoney = (cents: number) => (cents > 0 ? "+" : cents < 0 ? "−" : "") + money(Math.abs(cents));
+/** Like `formatMoney` but always signed, for results: "+12 €", "−3,50 €". */
+export const formatSignedMoney = (cents: number, locale: string) =>
+  (cents > 0 ? "+" : cents < 0 ? "−" : "") + formatMoney(Math.abs(cents), locale);
 
 /** Parses user input like "20", "20,5" or "20.50" into cents. Returns null for invalid input. */
 export function parseCents(input: string): number | null {

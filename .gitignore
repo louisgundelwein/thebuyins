@@ -5,3 +5,6 @@ dist
 *.tsbuildinfo
 ios
 android
+
+# Claude Code agent worktrees
+.claude/worktrees

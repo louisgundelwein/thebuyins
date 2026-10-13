@@ -1,0 +1,30 @@
+{
+  "de": {
+    "languageName": "Deutsch",
+    "preview": {
+      "dimensions": "iOS: 1320 × 2868 · Google Play: 1434 × 2868",
+      "panorama": "Fünf Motive für The Buy-Ins"
+    },
+    "frames": {
+      "live": { "title": ["Jeder Buy-in", "im Blick"], "sub": "Buy-ins, Rebuys, Cash-outs.", "label": "Live-Tisch" },
+      "seats": { "title": ["Plätze fair", "auslosen"], "sub": "Ein Tippen. Alle sitzen.", "label": "Sitzplätze" },
+      "settlement": { "title": ["Wer zahlt", "wen?"], "sub": "Die Abrechnung steht.", "label": "Abrechnung" },
+      "overview": { "title": ["Euer Verlauf.", "Euer Überblick."], "sub": "Historie, Chart, Rangliste.", "label": "Übersicht" },
+      "history": { "title": ["Nur Buchhaltung.", "Kein Glücksspiel."], "sub": "Für euren Pokerabend.", "label": "Historie" }
+    }
+  },
+  "en": {
+    "languageName": "English",
+    "preview": {
+      "dimensions": "iOS: 1320 × 2868 · Google Play: 1434 × 2868",
+      "panorama": "Five frames for The Buy-Ins"
+    },
+    "frames": {
+      "live": { "title": ["Buy-ins at", "a glance"], "sub": "Buy-ins, rebuys, cash-outs.", "label": "Live table" },
+      "seats": { "title": ["Fair seat", "draw"], "sub": "One tap. Everyone's seated.", "label": "Seat draw" },
+      "settlement": { "title": ["Who pays", "whom?"], "sub": "Settled in seconds.", "label": "Settlement" },
+      "overview": { "title": ["Your history.", "Your overview."], "sub": "History, chart, leaderboard.", "label": "Overview" },
+      "history": { "title": ["Just bookkeeping.", "No gambling."], "sub": "For your poker night.", "label": "History" }
+    }
+  }
+}

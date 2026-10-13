@@ -1,7 +1,7 @@
 import { settle, summarize, type Entry } from "@thebuyins/core";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, notExists } from "drizzle-orm";
 import { db } from "./db";
-import { buyIn, game, member, seat } from "./db/schema/poker";
+import { buyIn, game, group, hiddenGame, member, seat } from "./db/schema/poker";
 
 /** Builds the full table state of one game: seats, buy-in log, totals and suggested transfers. */
 export async function loadGame(gameId: string) {
@@ -37,12 +37,21 @@ export async function loadGame(gameId: string) {
   return { game: g, seats, buyIns, summary, transfers };
 }
 
-/** Results of every finished game in a group, oldest first. Basis for standings and history. */
-export async function finishedResults(groupId: string) {
+/**
+ * Results of every finished game in a group that the viewer hasn't removed, oldest first.
+ * Basis for standings and history; removing a game only changes the viewer's own numbers.
+ */
+export async function finishedResults(groupId: string, userId: string) {
   const games = await db
     .select({ id: game.id, title: game.title, startedAt: game.startedAt })
     .from(game)
-    .where(and(eq(game.groupId, groupId), eq(game.status, "finished")))
+    .where(
+      and(
+        eq(game.groupId, groupId),
+        eq(game.status, "finished"),
+        notExists(db.select().from(hiddenGame).where(and(eq(hiddenGame.gameId, game.id), eq(hiddenGame.userId, userId)))),
+      ),
+    )
     .orderBy(game.startedAt);
   if (!games.length) return [];
 
@@ -82,6 +91,21 @@ export function historyOf(results: Results, memberId: string) {
       ? [{ gameId: g.id, title: g.title, startedAt: g.startedAt, players: g.players.length, rank: rank + 1, buyInCents: me.buyInCents, netCents: me.netCents }]
       : [];
   });
+}
+
+/** The viewer's own games from groups they left, newest first. Their books stay intact there. */
+export async function archiveOf(userId: string) {
+  const left = await db
+    .select({ memberId: member.id, groupId: member.groupId, groupName: group.name })
+    .from(member)
+    .innerJoin(group, eq(group.id, member.groupId))
+    .where(and(eq(member.userId, userId), isNotNull(member.leftAt)));
+  const rows = await Promise.all(
+    left.map(async (m) =>
+      historyOf(await finishedResults(m.groupId, userId), m.memberId).map((h) => ({ ...h, groupName: m.groupName })),
+    ),
+  );
+  return rows.flat().sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
 }
 
 /** Seats are keyed by member id so results can be aggregated across games. */

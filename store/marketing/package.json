@@ -1,0 +1,7 @@
+{
+  "name": "the-buy-ins-marketing-mocks",
+  "private": true,
+  "type": "module",
+  "scripts": { "render": "node render.mjs" },
+  "dependencies": { "playwright-core": "1.56.1", "sharp": "0.34.4" }
+}
