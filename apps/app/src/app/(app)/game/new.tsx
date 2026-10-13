@@ -221,7 +221,7 @@ export default function NewGame() {
 }
 
 const s = StyleSheet.create({
-  top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: PAGE_TOP, marginBottom: 2 },
+  top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: PAGE_TOP + 16, marginBottom: 2 },
   fields: { flexDirection: "row", gap: 8, alignItems: "center" },
   footer: { flexDirection: "row", gap: 10 },
   gridRow: { flexDirection: "row", gap: 10 },

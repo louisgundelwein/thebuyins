@@ -9,7 +9,7 @@ export default function AppLayout() {
     <GroupProvider>
       <Stack screenOptions={stackHeader}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="game/new" options={{ presentation: "modal", headerRight: () => <CloseButton onPress={() => router.back()} /> }} />
+        <Stack.Screen name="game/new" options={{ presentation: "modal", headerLeft: () => <CloseButton onPress={() => router.back()} /> }} />
       </Stack>
     </GroupProvider>
   );

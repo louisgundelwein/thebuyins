@@ -14,7 +14,7 @@ import {
   type TextProps,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLanguage } from "@/lib/language";
 import { avatarColor, c, radius } from "@/lib/theme";
 import { CloseIcon } from "./icons";
@@ -31,6 +31,8 @@ export const PAGE_TOP = 48;
  * and lifts above the keyboard.
  */
 export function Screen({ children, footer, dock }: { children: ReactNode; footer?: ReactNode; dock?: boolean }) {
+  // Modal sheets report a zero bottom inset, so keep the footer clear of the home indicator anyway.
+  const insets = useSafeAreaInsets();
   return (
     <LinearGradient colors={[c.bgTop, c.bg]} locations={[0, 0.45]} style={s.fill}>
       <KeyboardAvoidingView style={s.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -38,7 +40,7 @@ export function Screen({ children, footer, dock }: { children: ReactNode; footer
           <ScrollView contentContainerStyle={[s.scroll, dock && { paddingBottom: DOCK_SPACE }]} keyboardShouldPersistTaps="handled">
             <View style={s.column}>{children}</View>
           </ScrollView>
-          {footer ? <View style={[s.column, s.footer]}>{footer}</View> : null}
+          {footer ? <View style={[s.column, s.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}>{footer}</View> : null}
         </SafeAreaView>
       </KeyboardAvoidingView>
     </LinearGradient>
