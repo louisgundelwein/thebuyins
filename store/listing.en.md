@@ -44,7 +44,7 @@ HISTORY AND STATS
 GOOD TO KNOW
 - Sign up with email and password. Your name is what the group sees.
 - Amounts are in euros.
-- You can sign out at any time from the profile menu.
+- You can delete your account at any time in the app.
 - Dark design, built for use at the table.
 
 The Buy-Ins is intended for adults, 18 and older. It is not a casino app and not a game. There is nothing to win or lose inside the app.
