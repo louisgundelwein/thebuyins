@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -9,7 +10,12 @@ const theme = { ...DarkTheme, colors: { ...DarkTheme.colors, background: c.bg, p
 
 export default function RootLayout() {
   const { data: session, isPending } = authClient.useSession();
-  if (isPending) return null;
+  // Better Auth refetches the session when the app returns to the foreground and, while signed
+  // out, flips isPending back to true. Only block on the first load, or the whole tree remounts
+  // and a half-filled sign-in form is wiped.
+  const loaded = useRef(false);
+  if (!isPending) loaded.current = true;
+  if (!loaded.current) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
