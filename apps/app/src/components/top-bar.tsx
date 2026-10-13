@@ -10,7 +10,7 @@ import { shareInvite } from "@/lib/invite";
 import { useGroup, useGroups } from "@/lib/queries";
 import { avatarColor, c } from "@/lib/theme";
 import { CheckIcon, ChevronIcon, PlusIcon } from "./icons";
-import { Chip, T } from "./ui";
+import { T } from "./ui";
 
 type Menu = "group" | "profile" | null;
 
@@ -89,7 +89,15 @@ export function TopBar({ left }: { left?: ReactNode }) {
           <T tone="muted" size={12}>{t.language.title}</T>
           <View style={s.segments}>
             {languageChoices.map((option) => (
-              <Chip key={option} title={t.language[option]} active={choice === option} onPress={() => setChoice(option)} />
+              <Pressable
+                key={option}
+                onPress={() => setChoice(option)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: choice === option }}
+                style={[s.segment, choice === option && { backgroundColor: c.accent }]}
+              >
+                <T size={13} weight="700" numberOfLines={1} style={{ color: choice === option ? c.onAccent : "#c4b5fd" }}>{t.language[option]}</T>
+              </Pressable>
             ))}
           </View>
         </View>
@@ -137,7 +145,7 @@ function Item({ children, onPress, icon, selected, danger, disabled }: {
       accessibilityState={{ selected, disabled }}
       style={({ pressed }) => [s.item, disabled && { opacity: 0.4 }, pressed && { backgroundColor: c.faint }]}
     >
-      <T numberOfLines={1} style={[s.shrink, danger && { color: c.neg }]}>{children}</T>
+      <T numberOfLines={1} style={[s.label, danger && { color: c.neg }]}>{children}</T>
       {icon && <View style={s.slot} importantForAccessibility="no">{icons[icon]}</View>}
     </Pressable>
   );
@@ -164,5 +172,7 @@ const s = StyleSheet.create({
   item: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 11, borderRadius: 14 },
   slot: { width: 16, height: 16, alignItems: "center", justifyContent: "center" },
   language: { paddingHorizontal: 12, paddingVertical: 10, gap: 8 },
-  segments: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  segments: { flexDirection: "row", gap: 4, padding: 3, borderRadius: 12, backgroundColor: c.faint },
+  segment: { flex: 1, alignItems: "center", paddingVertical: 7, borderRadius: 9 },
+  label: { flex: 1 },
 });
