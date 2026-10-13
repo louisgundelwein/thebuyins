@@ -5,6 +5,7 @@ import { logger } from "hono/logger";
 import { auth, webOrigins } from "./auth";
 import { gameRoutes } from "./routes/games";
 import { groupRoutes } from "./routes/groups";
+import { wellKnownRoutes } from "./well-known";
 
 const api = new Hono().route("/", groupRoutes).route("/", gameRoutes);
 
@@ -15,6 +16,8 @@ export const app = new Hono()
   .on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw))
   .get("/api/health", (c) => c.json({ ok: true }))
   .route("/api", api)
+  // Universal Links / App Links verification. Mounted here so it precedes the SPA fallback in index.ts.
+  .route("/", wellKnownRoutes)
   .onError((err, c) => {
     if (err instanceof HTTPException) return c.json({ error: err.message }, err.status);
     console.error(err);
