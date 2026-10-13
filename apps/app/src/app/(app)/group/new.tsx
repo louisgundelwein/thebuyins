@@ -2,12 +2,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { parseResponse } from "hono/client";
 import { useState } from "react";
-import { Button, Field, Notice, Screen, T } from "@/components/ui";
+import { Button, Field, Notice, PAGE_TOP, Screen, T } from "@/components/ui";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/lib/language";
 import { parseCents } from "@/lib/money";
 import { keys } from "@/lib/queries";
 
 export default function NewGroup() {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [buyIn, setBuyIn] = useState("20");
   const qc = useQueryClient();
@@ -22,10 +24,10 @@ export default function NewGroup() {
   });
 
   return (
-    <Screen footer={<Button title="Gruppe erstellen" disabled={!name.trim() || !cents} loading={create.isPending} onPress={() => cents && create.mutate(cents)} />}>
-      <T size={28} weight="800" style={{ marginTop: 48 }}>Neue Gruppe</T>
-      <Field label="Name" value={name} onChangeText={setName} placeholder="Titanom" autoFocus />
-      <Field label="Standard Buy-in in €" value={buyIn} onChangeText={setBuyIn} keyboardType="decimal-pad" />
+    <Screen footer={<Button title={t.group.create} disabled={!name.trim() || !cents} loading={create.isPending} onPress={() => cents && create.mutate(cents)} />}>
+      <T size={28} weight="800" style={{ marginTop: PAGE_TOP }}>{t.group.title}</T>
+      <Field label={t.group.name} value={name} onChangeText={setName} placeholder={t.group.namePlaceholder} autoFocus />
+      <Field label={t.group.defaultBuyIn} value={buyIn} onChangeText={setBuyIn} keyboardType="decimal-pad" />
       {create.isError && <Notice>{create.error.message}</Notice>}
     </Screen>
   );

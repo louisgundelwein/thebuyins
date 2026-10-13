@@ -1,19 +1,25 @@
 import { distributeDifference } from "@thebuyins/core";
 import { zValidator } from "@hono/zod-validator";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../db";
-import { buyIn, game, member, seat } from "../db/schema/poker";
-import { membershipOf, requireUser, type AppEnv } from "../middleware";
+import { buyIn, game, hiddenGame, member, seat } from "../db/schema/poker";
+import { memberOf, membershipOf, requireUser, type AppEnv } from "../middleware";
 import { loadGame } from "../stats";
 
-/** Loads a game the caller may see. With `live`, also rejects edits to finished games. */
+/**
+ * Loads a game the caller may see: any group member, or a former member who played in it.
+ * With `live`, the caller must still be a member and the game must be running.
+ */
 async function gameFor(userId: string, gameId: string, opts: { live?: boolean } = {}) {
   const state = await loadGame(gameId);
   if (!state) throw new HTTPException(404, { message: "Spiel nicht gefunden" });
-  await membershipOf(userId, state.game.groupId);
+  const me = await memberOf(userId, state.game.groupId);
+  const played = !!me && state.seats.some((s) => s.memberId === me.id);
+  if (!me || (me.leftAt && !played)) throw new HTTPException(404, { message: "Spiel nicht gefunden" });
+  if (opts.live && me.leftAt) throw new HTTPException(403, { message: "Du hast die Gruppe verlassen" });
   if (opts.live && state.game.status !== "live") throw new HTTPException(409, { message: "Spiel ist abgeschlossen" });
   return state;
 }
@@ -34,6 +40,18 @@ export const gameRoutes = new Hono<AppEnv>()
     return c.json(await gameFor(c.var.user.id, c.req.valid("param").gameId));
   })
 
+  /**
+   * Removes a finished game from the caller's own history, stats and archive. Everyone else keeps it.
+   * Running games can't be removed.
+   */
+  .post("/games/:gameId/hide", zValidator("param", gameParam), async (c) => {
+    const { gameId } = c.req.valid("param");
+    const state = await gameFor(c.var.user.id, gameId);
+    if (state.game.status !== "finished") throw new HTTPException(409, { message: "Laufende Spiele lassen sich nicht entfernen" });
+    await db.insert(hiddenGame).values({ userId: c.var.user.id, gameId }).onConflictDoNothing();
+    return c.json({ ok: true });
+  })
+
   /** Seats a group member who arrives late, in the next free position, with the standard buy-in. */
   .post(
     "/games/:gameId/seats",
@@ -44,7 +62,9 @@ export const gameRoutes = new Hono<AppEnv>()
       const state = await gameFor(c.var.user.id, gameId, { live: true });
       const { memberId } = c.req.valid("json");
 
-      const m = await db.query.member.findFirst({ where: and(eq(member.id, memberId), eq(member.groupId, state.game.groupId)) });
+      const m = await db.query.member.findFirst({
+        where: and(eq(member.id, memberId), eq(member.groupId, state.game.groupId), isNull(member.leftAt)),
+      });
       if (!m) throw new HTTPException(400, { message: "Unbekannter Spieler" });
       if (state.seats.some((s) => s.memberId === memberId)) throw new HTTPException(409, { message: "Sitzt schon am Tisch" });
 

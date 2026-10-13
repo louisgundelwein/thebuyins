@@ -1,21 +1,15 @@
 import { Stack } from "expo-router";
+import { router } from "expo-router";
+import { CloseButton } from "@/components/ui";
 import { GroupProvider } from "@/lib/group";
-import { c } from "@/lib/theme";
+import { stackHeader } from "@/lib/theme";
 
 export default function AppLayout() {
   return (
     <GroupProvider>
-      <Stack
-        screenOptions={{
-          headerTransparent: true,
-          headerTitle: "",
-          headerTintColor: c.text,
-          headerBackButtonDisplayMode: "minimal",
-          contentStyle: { backgroundColor: c.bg },
-        }}
-      >
+      <Stack screenOptions={stackHeader}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="game/new" options={{ presentation: "modal" }} />
+        <Stack.Screen name="game/new" options={{ presentation: "modal", headerLeft: () => <CloseButton onPress={() => router.back()} /> }} />
       </Stack>
     </GroupProvider>
   );
