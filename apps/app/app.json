@@ -14,7 +14,8 @@
       "config": {
         "usesNonExemptEncryption": false
       },
-      "appleTeamId": "JR5GVNGJD8"
+      "appleTeamId": "JR5GVNGJD8",
+      "associatedDomains": ["applinks:thebuyins.com"]
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +26,15 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.thebuyins.app",
-      "versionCode": 5
+      "versionCode": 5,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [{ "scheme": "https", "host": "thebuyins.com", "pathPrefix": "/join" }]
+        }
+      ]
     },
     "web": {
       "output": "single",
