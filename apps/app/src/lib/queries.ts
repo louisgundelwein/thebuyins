@@ -35,15 +35,17 @@ export const useGame = (gameId: string) =>
 
 /**
  * Wraps a game mutation. Every game endpoint returns the fresh state, which goes
- * straight into the cache; group pages are invalidated so standings stay current.
+ * straight into the cache; group pages are invalidated so standings stay current. `onDone` runs
+ * after that, for callers that navigate once the server has accepted the change.
  */
-export function useGameMutation<V>(gameId: string, run: (vars: V) => Promise<GameState>) {
+export function useGameMutation<V>(gameId: string, run: (vars: V) => Promise<GameState>, onDone?: (state: GameState) => void) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: run,
     onSuccess: (state) => {
       qc.setQueryData(keys.game(gameId), state);
       void qc.invalidateQueries({ queryKey: ["group", state.game.groupId] });
+      onDone?.(state);
     },
   });
 }

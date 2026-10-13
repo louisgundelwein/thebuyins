@@ -174,8 +174,12 @@ function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBa
   const cashOut = useGameMutation(game.id, ({ seatId, cashOutCents }: { seatId: string; cashOutCents: number | null }) =>
     parseResponse(api.games[":gameId"].seats[":seatId"]["cash-out"].$put({ param: { gameId: game.id, seatId }, json: { cashOutCents } })),
   );
-  const finish = useGameMutation(game.id, (distributeDifference: boolean) =>
-    parseResponse(api.games[":gameId"].finish.$post({ param: { gameId: game.id }, json: { distributeDifference } })),
+  // Finishing leaves the live tab (it has no running game afterwards), so open the result screen.
+  const finish = useGameMutation(
+    game.id,
+    (distributeDifference: boolean) =>
+      parseResponse(api.games[":gameId"].finish.$post({ param: { gameId: game.id }, json: { distributeDifference } })),
+    (state) => router.push(`/game/${state.game.id}`),
   );
 
   const allIn = seats.every((s) => s.cashOutCents !== null);

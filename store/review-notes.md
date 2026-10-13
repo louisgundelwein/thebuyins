@@ -25,7 +25,12 @@ The demo user is a member of the group "Freitagsrunde" with four guests, three f
 6. Tap "Abrechnen" (settle), enter chips per player (a cash-out), tap "Abschließen".
 7. The result screen shows each player's net and "Wer zahlt wen" (who pays whom). The finished game appears in the history tab with the leaderboard and balance chart.
 
-Note: the app UI is currently in German. Amounts are in euros.
+The app UI is available in English and German. It follows the device language and can be switched in the profile menu (avatar top right, "Language"). Amounts are in euros.
+
+## Other features
+- Members screen (group switcher, top left, "Members"): see members, leave the group. Group admins can remove members.
+- "Remove from my history" on a finished game hides it only for the current user; other players keep it.
+- Games of groups you left are in the profile menu under "Archive".
 
 ## Account deletion
 Account deletion is in the app: tap the avatar at the top right, then "Account", then "Account löschen" and confirm with the password. Deletion is also possible through the support page at `<origin>/support`.

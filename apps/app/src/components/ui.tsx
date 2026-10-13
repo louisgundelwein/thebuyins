@@ -27,8 +27,8 @@ export const PAGE_TOP = 48;
 
 /**
  * Scrollable page with the violet top glow. Content is capped in width so web stays phone-shaped.
- * Tab screens pass `dock` so content scrolls up to the floating tab bar. The footer stays pinned
- * and lifts above the keyboard.
+ * Tab screens pass `dock` so content scrolls up to the floating tab bar; a footer then sits above
+ * the dock instead. The footer stays pinned and lifts above the keyboard.
  */
 export function Screen({ children, footer, dock }: { children: ReactNode; footer?: ReactNode; dock?: boolean }) {
   // Modal sheets report a zero bottom inset, so keep the footer clear of the home indicator anyway.
@@ -37,10 +37,10 @@ export function Screen({ children, footer, dock }: { children: ReactNode; footer
     <LinearGradient colors={[c.bgTop, c.bg]} locations={[0, 0.45]} style={s.fill}>
       <KeyboardAvoidingView style={s.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <SafeAreaView style={s.fill} edges={["top", "bottom"]}>
-          <ScrollView contentContainerStyle={[s.scroll, dock && { paddingBottom: DOCK_SPACE }]} keyboardShouldPersistTaps="handled">
+          <ScrollView contentContainerStyle={[s.scroll, dock && !footer && { paddingBottom: DOCK_SPACE }]} keyboardShouldPersistTaps="handled">
             <View style={s.column}>{children}</View>
           </ScrollView>
-          {footer ? <View style={[s.column, s.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}>{footer}</View> : null}
+          {footer ? <View style={[s.column, s.footer, { paddingBottom: dock ? DOCK_SPACE : Math.max(insets.bottom, 24) }]}>{footer}</View> : null}
         </SafeAreaView>
       </KeyboardAvoidingView>
     </LinearGradient>
