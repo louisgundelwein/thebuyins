@@ -11,15 +11,18 @@ The Buy-Ins is a ledger and scorekeeper for private home poker games among frien
 - The app does not connect users with games, operators or strangers. Groups are private and join-by-invite (link or six-character code).
 - Category: Utilities. Intended audience: adults, 18+.
 
-## Demo account
-- Email: `<DEMO_EMAIL>`
-- Password: `<DEMO_PASSWORD>`
-The demo user is a member of the group "Freitagsrunde" with four guests, three finished games (history, leaderboard and balance chart are filled) and one running game "Heute" for the live tab.
+## Demo access — not yet verified
+No working review login or populated demo group has been verified in this audit. Do not submit these notes until the access checks in [release audit](release-audit.md#demo-access-checklist) pass.
+
+Provide the actual email/password only in App Store Connect review information and Google Play Console app access, never in this repository, PR comments, screenshots or logs. The app implements email/password sign-in; the server enables that provider without requiring email verification in its explicit configuration. Actual production access must still be tested.
+
+Required fixture (to create or verify, not a claim that it exists): a dedicated demo account with access to “Freitagsrunde”, four synthetic guests, three finished games and one running game “Heute”. Give the reviewer admin permissions if admin removal/deletion features are to be exercised. Use synthetic records and keep a reset procedure ready after destructive review actions.
 
 ## Quick test flow
+After verifying the fixture and credentials:
 1. Sign in with the demo account (email and password).
 2. On the Overview tab, open the group (the group switcher is top left).
-3. Tap "Neues Spiel" (new game), choose players, tap "Spiel starten".
+3. Tap "New game" / "Neues Spiel", choose players, tap "Start game" / "Spiel starten". If a live game already exists, inspect and settle that game first before creating another.
 4. On the live game screen, tap the "+" chip next to a player to add a rebuy. Remove an entry with the cross in the list.
 5. Optionally use "Plätze auslosen" (seat draw).
 6. Tap "Abrechnen" (settle), enter chips per player (a cash-out), tap "Abschließen".
@@ -33,7 +36,9 @@ The app UI is available in English and German. It follows the device language an
 - Games of groups you left are in the profile menu under "Archive".
 
 ## Account deletion
-Account deletion is in the app: tap the avatar at the top right, then "Account", then "Account löschen" and confirm with the password. Deletion is also possible through the support page at `<origin>/support`.
+Account deletion is in the app: tap the avatar at the top right, then "Account", then "Account löschen" and confirm with the password. Without app access, request deletion by emailing the contact on https://thebuyins.com/support from the registered email address. The page promises processing within 30 days; this is a manual support process, not a web deletion form.
+
+Account deletion removes authentication records but keeps group member names and game amounts/history as guest records. Do not describe it as erasing all player data. Validate deletion with a separate disposable account and restore review access if the demo account is deleted.
 
 ## Other
 - Sign-in is email and password only. No third-party login.
