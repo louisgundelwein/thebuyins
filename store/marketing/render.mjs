@@ -8,7 +8,7 @@ import path from 'node:path';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const inputDir = process.env.MARKETING_SCREENSHOTS || path.resolve(root, '../screenshots/ios-6.9');
 const W = 1320, H = 2868;
-const formats = { ios: W, play: 1434 };
+const formats = { ios: W, play: 1613 };
 const copy = JSON.parse(await readFile(path.join(root, 'copy.json'), 'utf8'));
 const features = [
   { key: 'live', filename: '02-live-table.png' },

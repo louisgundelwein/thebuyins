@@ -35,7 +35,7 @@ All inputs must be 1320 × 2868. Missing German captures or invalid dimensions s
 ## Outputs
 
 - `out/<lang>/ios/01.png` through `05.png`: 1320 × 2868.
-- `out/<lang>/play/01.png` through `05.png`: 1434 × 2868, an exact 1:2 ratio. The canvas is wider, with 57 extra pixels on each side of each composition; text, phone size and screenshot proportions stay the same.
+- `out/<lang>/play/01.png` through `05.png`: 1613 × 2868, the 9:16 ratio Google Play requires. The canvas is wider, with about 146 extra pixels on each side of each composition; text, phone size and screenshot proportions stay the same.
 - `out/<lang>/panorama.png`: 3000px-wide iOS panorama preview.
 - Each store directory also contains `panorama.png`, `panorama-full.png` and self-contained `source.html`.
 - `out/<lang>/manifest.json`: source paths, source language, fallback flags, source SHA-256 hashes, rendered copy, dimensions, collision-check results and timestamp.
