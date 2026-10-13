@@ -9,7 +9,7 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "bundleIdentifier": "com.thebuyins.app",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
@@ -45,9 +45,13 @@
       [
         "expo-localization",
         {
-          "supportedLocales": ["en", "de"]
+          "supportedLocales": [
+            "en",
+            "de"
+          ]
         }
-      ]
+      ],
+      "./plugins/with-scene-lifecycle"
     ],
     "experiments": {
       "typedRoutes": true,
