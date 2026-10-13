@@ -7,10 +7,7 @@ export default function SignIn() {
   return (
     <Screen>
       <Hero style={{ marginTop: 40, alignItems: "center", paddingVertical: 32 }}>
-        <T size={40} weight="800">
-          <T size={40} weight="800" importantForAccessibility="no" accessibilityElementsHidden>♠ </T>
-          The Buy-Ins
-        </T>
+        <T size={40} weight="800" accessibilityLabel="The Buy-Ins">♠ The Buy-Ins</T>
         <T tone="muted">{t.auth.tagline}</T>
       </Hero>
       <AuthForm />

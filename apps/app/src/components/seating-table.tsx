@@ -48,11 +48,11 @@ export function SeatingTable({ seats }: { seats: readonly { id: string; name: st
               style={[s.seat, { left: cx - SEAT_W / 2, top: cy - avatar / 2 - 7 }]}
             >
               <Avatar id={seat.id} name={seat.name} guest={seat.guest} size={avatar} />
-              <T size={12} numberOfLines={1}>{seat.name}</T>
-              <T tone="muted" size={10}>{t.seating.seat(i + 1)}</T>
+              <T size={12} numberOfLines={1} maxFontSizeMultiplier={1.3}>{seat.name}</T>
+              <T tone="muted" size={10} maxFontSizeMultiplier={1.3}>{t.seating.seat(i + 1)}</T>
               {i === 0 && (
                 <View style={[s.dealer, { left: SEAT_W / 2 + avatar / 2 - 4, top: avatar - 14 }]}>
-                  <T size={11} weight="800" style={{ color: "#000" }} importantForAccessibility="no">D</T>
+                  <T size={11} weight="800" style={{ color: "#000" }} maxFontSizeMultiplier={1.3} importantForAccessibility="no">D</T>
                 </View>
               )}
             </View>

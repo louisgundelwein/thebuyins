@@ -55,6 +55,7 @@ function Dock({ state, navigation }: TabBarProps) {
         onPress={() => groupId && router.push({ pathname: "/game/new", params: { groupId } })}
         accessibilityRole="button"
         accessibilityLabel={t.tab.newGame}
+        accessibilityState={{ disabled: !groupId }}
       >
         <Text style={s.plusText} importantForAccessibility="no">+</Text>
       </Pressable>

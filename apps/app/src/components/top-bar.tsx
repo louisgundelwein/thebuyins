@@ -50,7 +50,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
         hitSlop={6}
       >
         <View style={[s.me, { backgroundColor: avatarColor(user?.id ?? "") }]}>
-          <T size={12} weight="700">{initials(user?.name ?? "")}</T>
+          <T size={12} weight="700" maxFontSizeMultiplier={1.3}>{initials(user?.name ?? "")}</T>
         </View>
       </Pressable>
 
@@ -101,6 +101,7 @@ function Item({ children, onPress, right, selected, danger }: { children: string
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={children}
       accessibilityState={{ selected }}
       style={({ pressed }) => [s.item, pressed && { backgroundColor: c.faint }]}
     >

@@ -19,6 +19,9 @@ const de = {
     names: (list: readonly string[]) =>
       list.length > 1 ? `${list.slice(0, -1).join(", ")} und ${list.at(-1)}` : (list[0] ?? ""),
   },
+  invite: {
+    message: (group: string, url: string) => `Komm in unsere Pokerrunde "${group}": ${url}`,
+  },
   topBar: {
     group: "Gruppe",
     switchGroup: "Gruppe wechseln",
@@ -40,7 +43,7 @@ const de = {
     games: (n: number) => `${n} ${n === 1 ? "Spiel" : "Spiele"}`,
     placeOf: (rank: number, players: number) => `Platz ${rank} von ${players}`,
     standings: "Rangliste",
-    standingLine: (games: number, wins: number) => `${games} ${games === 1 ? "Spiel" : "Spiele"} · ${wins} im Plus`,
+    standingLine: (games: number, wins: number) => `${games} ${games === 1 ? "Spiel" : "Spiele"} · ${wins} mit positivem Saldo`,
   },
   chart: {
     balance: (amount: string) => `Saldo-Verlauf, aktuell ${amount}`,
@@ -137,6 +140,7 @@ const de = {
     tagline: "Buy-ins tracken, fair abrechnen.",
     errors: {
       INVALID_EMAIL_OR_PASSWORD: "E-Mail oder Passwort falsch",
+      INVALID_PASSWORD: "Das Passwort stimmt nicht",
       USER_ALREADY_EXISTS: "Für diese E-Mail gibt es schon einen Account",
       USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "Für diese E-Mail gibt es schon einen Account",
       INVALID_EMAIL: "Bitte gib eine gültige E-Mail-Adresse ein",
@@ -190,6 +194,9 @@ const en: Dict = {
     names: (list: readonly string[]) =>
       list.length > 1 ? `${list.slice(0, -1).join(", ")} and ${list.at(-1)}` : (list[0] ?? ""),
   },
+  invite: {
+    message: (group: string, url: string) => `Join our poker night "${group}": ${url}`,
+  },
   topBar: {
     group: "Group",
     switchGroup: "Switch group",
@@ -211,7 +218,7 @@ const en: Dict = {
     games: (n: number) => `${n} ${n === 1 ? "game" : "games"}`,
     placeOf: (rank: number, players: number) => `Place ${rank} of ${players}`,
     standings: "Standings",
-    standingLine: (games: number, wins: number) => `${games} ${games === 1 ? "game" : "games"} · ${wins} in profit`,
+    standingLine: (games: number, wins: number) => `${games} ${games === 1 ? "game" : "games"} · ${wins} with a positive balance`,
   },
   chart: {
     balance: (amount: string) => `Balance history, currently ${amount}`,
@@ -308,6 +315,7 @@ const en: Dict = {
     tagline: "Track buy-ins, settle up fairly.",
     errors: {
       INVALID_EMAIL_OR_PASSWORD: "Invalid email or password",
+      INVALID_PASSWORD: "Wrong password",
       USER_ALREADY_EXISTS: "An account with this email already exists",
       USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "An account with this email already exists",
       INVALID_EMAIL: "Please enter a valid email address",

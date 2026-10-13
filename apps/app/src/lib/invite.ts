@@ -1,4 +1,5 @@
 import { Platform, Share } from "react-native";
+import { t } from "./i18n";
 
 /**
  * Public web origin used in shared links. On web it's the current origin (read lazily, the
@@ -15,7 +16,7 @@ export const inviteUrl = (code: string) => `${webUrl()}/join?code=${code}`;
 /** Opens the system share sheet (or Web Share / clipboard fallback) with a group invite link. */
 export async function shareInvite(group: { name: string; inviteCode: string }) {
   const url = inviteUrl(group.inviteCode);
-  const message = `Komm in unsere Pokerrunde "${group.name}": ${url}`;
+  const message = t.invite.message(group.name, url);
   if (Platform.OS === "web" && !navigator.share) {
     await navigator.clipboard.writeText(message);
     return "copied" as const;

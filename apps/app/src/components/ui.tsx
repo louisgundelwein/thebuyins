@@ -85,7 +85,7 @@ export function Avatar({ id, name, guest, size = 34 }: { id: string; name: strin
         guest ? s.guest : { backgroundColor: avatarColor(id) },
       ]}
     >
-      <T size={size > 40 ? 15 : 12} weight="700" tone={guest ? "muted" : undefined}>{initials}</T>
+      <T size={size > 40 ? 15 : 12} weight="700" tone={guest ? "muted" : undefined} maxFontSizeMultiplier={1.3}>{initials}</T>
       {!guest && <View style={s.badge} />}
     </View>
   );

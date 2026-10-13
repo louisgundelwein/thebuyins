@@ -63,7 +63,7 @@ export default function NewGame() {
   if (!page.data) return <Loading />;
   const { group, me, members } = page.data;
   const cents = parseCents(buyIn ?? String(group.defaultBuyInCents / 100));
-  const byName = (a: { displayName: string }, b: { displayName: string }) => a.displayName.localeCompare(b.displayName, "de");
+  const byName = (a: { displayName: string }, b: { displayName: string }) => a.displayName.localeCompare(b.displayName, locale);
   const sorted = [
     ...members.filter((m) => m.id === me.id),
     ...members.filter((m) => m.id !== me.id && m.userId !== null).sort(byName),
