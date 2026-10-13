@@ -51,6 +51,7 @@ function JoinGroup({ initialCode }: { initialCode: string }) {
     mutationFn: () => parseResponse(api.invites[":code"].join.$post({ param: { code: code.trim() }, json: { claimMemberId: claim } })),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: keys.groups });
+      await qc.invalidateQueries({ queryKey: keys.archive });
       router.replace("/");
     },
   });

@@ -41,6 +41,7 @@ export default function Overview() {
         </Hero>
         <Button title={t.overview.createGroup} onPress={() => router.push("/group/new")} />
         <Button title={t.topBar.join} variant="ghost" onPress={() => router.push("/join")} />
+        <Button title={t.archive.title} variant="ghost" onPress={() => router.push("/archive")} />
         <Button title={t.topBar.signOut} variant="ghost" onPress={() => authClient.signOut()} />
       </Screen>
     );
@@ -52,7 +53,9 @@ export default function Overview() {
   let running = 0;
   const points = history.map((h) => (running += h.netCents));
   const last = history.at(-1);
-  const nameOf = (memberId: string) => data?.members.find((m) => m.id === memberId);
+  // Former members stay listed so standings and history still show their names.
+  const people = [...(data?.members ?? []), ...(data?.formerMembers ?? [])];
+  const nameOf = (memberId: string) => people.find((m) => m.id === memberId);
 
   return (
     <Screen dock>

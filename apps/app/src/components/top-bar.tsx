@@ -28,7 +28,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
   const user = session?.user;
   const current = groups.data?.find((g) => g.id === groupId);
   const close = () => setMenu(null);
-  const go = (href: "/group/new" | "/group/members" | "/join" | "/account") => {
+  const go = (href: "/group/new" | "/group/members" | "/join" | "/account" | "/archive") => {
     close();
     router.push(href);
   };
@@ -68,7 +68,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
         ))}
         <Item onPress={() => go("/group/new")} icon="plus">{t.topBar.newGroup}</Item>
         <Item onPress={() => go("/join")} icon="chevron">{t.topBar.join}</Item>
-        {page.data?.me.role === "admin" && <Item onPress={() => go("/group/members")} icon="chevron">{t.topBar.members}</Item>}
+        {page.data && <Item onPress={() => go("/group/members")} icon="chevron">{t.topBar.members}</Item>}
       </Sheet>
 
       <Sheet open={menu === "profile"} onClose={close} side="right">
@@ -84,6 +84,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
           </Item>
         )}
         <Item onPress={() => go("/group/new")} icon="plus">{t.topBar.newGroup}</Item>
+        <Item onPress={() => go("/archive")} icon="chevron">{t.archive.title}</Item>
         <Item onPress={() => go("/account")} icon="chevron">{t.common.account}</Item>
         <View style={s.language}>
           <T tone="muted" size={12}>{t.language.title}</T>

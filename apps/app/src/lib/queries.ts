@@ -8,10 +8,15 @@ export const keys = {
   groups: ["groups"] as const,
   group: (id: string, season: Season) => ["group", id, season] as const,
   game: (id: string) => ["game", id] as const,
+  archive: ["archive"] as const,
 };
 
 export const useGroups = () =>
   useQuery({ queryKey: keys.groups, queryFn: () => parseResponse(api.groups.$get()) });
+
+/** Finished games from groups the caller left. */
+export const useArchive = () =>
+  useQuery({ queryKey: keys.archive, queryFn: () => parseResponse(api.archive.$get()) });
 
 export const useGroup = (groupId: string | undefined, season: Season = "all") =>
   useQuery({
