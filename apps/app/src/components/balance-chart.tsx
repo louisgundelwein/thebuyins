@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { View } from "react-native";
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
+import { signedMoney } from "@/lib/money";
+import { t } from "@/lib/i18n";
 import { c } from "@/lib/theme";
 
 /**
@@ -23,7 +25,13 @@ export function BalanceChart({ points, height = 120 }: { points: readonly number
   const last = values.length - 1;
 
   return (
-    <View style={{ height }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+    <View
+      style={{ height }}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={t.chart.balance(signedMoney(values.at(-1) ?? 0))}
+    >
       {width > 0 && (
         <Svg width={width} height={height}>
           <Defs>

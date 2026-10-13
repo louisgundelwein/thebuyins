@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Avatar, T } from "@/components/ui";
+import { t } from "@/lib/i18n";
 import { c } from "@/lib/theme";
 
 /** Design size from the mock; the whole table scales from this to the available width. */
@@ -27,10 +28,12 @@ export function SeatingTable({ seats }: { seats: readonly { id: string; name: st
         <LinearGradient
           colors={["#1a1530", "#2a1f4d", "#1a1530"]}
           locations={[0, 0.5, 1]}
+          accessible
+          accessibilityLabel={t.seating.seats(seats.length)}
           style={[s.felt, { left: 60 * k, top: 50 * k, width: 180 * k, height: 320 * k, borderRadius: 90 * k }]}
         >
           <T size={28} weight="800">{seats.length}</T>
-          <T tone="muted" size={12}>Plätze</T>
+          <T tone="muted" size={12}>{t.seating.seatsShort}</T>
         </LinearGradient>
 
         {seats.map((seat, i) => {
@@ -38,13 +41,18 @@ export function SeatingTable({ seats }: { seats: readonly { id: string; name: st
           const cx = w / 2 + Math.cos(a) * 128 * k;
           const cy = h / 2 + Math.sin(a) * 196 * k;
           return (
-            <View key={seat.id} style={[s.seat, { left: cx - SEAT_W / 2, top: cy - avatar / 2 - 7 }]}>
+            <View
+              key={seat.id}
+              accessible
+              accessibilityLabel={`${seat.name}, ${t.seating.seat(i + 1)}${i === 0 ? `, ${t.seating.dealer}` : ""}`}
+              style={[s.seat, { left: cx - SEAT_W / 2, top: cy - avatar / 2 - 7 }]}
+            >
               <Avatar id={seat.id} name={seat.name} guest={seat.guest} size={avatar} />
               <T size={12} numberOfLines={1}>{seat.name}</T>
-              <T tone="muted" size={10}>Platz {i + 1}</T>
+              <T tone="muted" size={10}>{t.seating.seat(i + 1)}</T>
               {i === 0 && (
                 <View style={[s.dealer, { left: SEAT_W / 2 + avatar / 2 - 4, top: avatar - 14 }]}>
-                  <T size={11} weight="800" style={{ color: "#000" }}>D</T>
+                  <T size={11} weight="800" style={{ color: "#000" }} importantForAccessibility="no">D</T>
                 </View>
               )}
             </View>

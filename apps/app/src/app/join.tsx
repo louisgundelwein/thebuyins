@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { parseResponse } from "hono/client";
 import { useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { AuthForm } from "@/components/auth-form";
 import { Avatar, Button, Chip, Field, Heading, Hero, Notice, Row, Screen, T } from "@/components/ui";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth";
+import { t } from "@/lib/i18n";
 import { keys } from "@/lib/queries";
 
 /**
@@ -22,8 +23,8 @@ export default function Join() {
   return (
     <Screen>
       <Hero style={{ marginTop: 40, alignItems: "center", paddingVertical: 32 }}>
-        <T size={32} weight="800">Einladung</T>
-        <T tone="muted" style={{ textAlign: "center" }}>Melde dich an oder registriere dich, um beizutreten.</T>
+        <T size={32} weight="800">{t.join.invitation}</T>
+        <T tone="muted" style={{ textAlign: "center" }}>{t.join.signInText}</T>
       </Hero>
       <AuthForm />
     </Screen>
@@ -55,34 +56,42 @@ function JoinGroup({ initialCode }: { initialCode: string }) {
   const toggleClaim = (id: string) => setClaim(claim === id ? undefined : id);
 
   return (
-    <Screen footer={<Button title="Beitreten" disabled={!invite.data} loading={join.isPending} onPress={() => join.mutate()} />}>
+    <Screen footer={<Button title={t.join.join} disabled={!invite.data} loading={join.isPending} onPress={() => join.mutate()} />}>
       <View style={{ flexDirection: "row", marginTop: 8 }}>
-        <Chip title="‹ Zurück" onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
+        <Chip title={`‹ ${t.common.back}`} label={t.common.back} onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
       </View>
-      <T size={28} weight="800" style={{ marginTop: 16 }}>Beitreten</T>
-      <Field label="Einladungscode" value={code} onChangeText={(t) => setCode(t.toUpperCase())} autoCapitalize="characters" maxLength={6} placeholder="K7Q2XZ" />
-      {invite.isError && <Notice>Code unbekannt</Notice>}
+      <T size={28} weight="800" style={{ marginTop: 16 }}>{t.join.title}</T>
+      <Field label={t.join.code} value={code} onChangeText={(v) => setCode(v.toUpperCase())} autoCapitalize="characters" maxLength={6} placeholder="K7Q2XZ" />
+      {invite.isError && <Notice>{t.join.unknownCode}</Notice>}
       {join.isError && <Notice>{join.error.message}</Notice>}
 
       {invite.data && (
         <>
           <Hero>
-            <T tone="muted">Gruppe</T>
+            <T tone="muted">{t.join.group}</T>
             <T size={28} weight="800">{invite.data.group.name}</T>
           </Hero>
           {invite.data.guests.length > 0 && (
             <>
-              <Heading title="Bist du schon als Gast dabei?" />
+              <Heading title={t.join.guestQuestion} />
               {invite.data.guests.map((g) => (
-                <Row key={g.id} dim={claim !== undefined && claim !== g.id}>
-                  <Avatar id={g.id} name={g.displayName} />
-                  <View style={{ flex: 1 }}>
-                    <T onPress={() => toggleClaim(g.id)}>{g.displayName}</T>
-                  </View>
-                  <T tone={claim === g.id ? "pos" : "muted"} onPress={() => toggleClaim(g.id)}>
-                    {claim === g.id ? "Das bin ich ✓" : "Das bin ich"}
-                  </T>
-                </Row>
+                <Pressable
+                  key={g.id}
+                  onPress={() => toggleClaim(g.id)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: claim === g.id }}
+                  accessibilityLabel={`${g.displayName}, ${t.join.thatsMe}`}
+                >
+                  <Row dim={claim !== undefined && claim !== g.id}>
+                    <Avatar id={g.id} name={g.displayName} />
+                    <View style={{ flex: 1 }}>
+                      <T>{g.displayName}</T>
+                    </View>
+                    <T tone={claim === g.id ? "pos" : "muted"}>
+                      {claim === g.id ? t.join.thatsMeChecked : t.join.thatsMe}
+                    </T>
+                  </Row>
+                </Pressable>
               ))}
             </>
           )}

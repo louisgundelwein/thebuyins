@@ -1,6 +1,8 @@
-const eur = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 2, minimumFractionDigits: 0 });
+import { locale } from "./i18n";
 
-/** 2050 → "20,50 €", 2000 → "20 €". */
+const eur = new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 2, minimumFractionDigits: 0 });
+
+/** Formats per device locale: 2050 → "20,50 €" (de) or "€20.50" (en), 2000 → "20 €" / "€20". */
 export const money = (cents: number) => eur.format(cents / 100);
 
 /** Like `money` but always signed, for results: "+12 €", "−3,50 €". */

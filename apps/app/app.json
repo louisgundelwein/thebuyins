@@ -41,7 +41,13 @@
           "imageWidth": 120
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": ["en", "de"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

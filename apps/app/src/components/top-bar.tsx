@@ -4,6 +4,7 @@ import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { authClient } from "@/lib/auth";
 import { useSelectedGroup } from "@/lib/group";
+import { t } from "@/lib/i18n";
 import { shareInvite } from "@/lib/invite";
 import { useGroup, useGroups } from "@/lib/queries";
 import { avatarColor, c } from "@/lib/theme";
@@ -32,11 +33,22 @@ export function TopBar({ left }: { left?: ReactNode }) {
   return (
     <View style={s.bar}>
       {left ?? (
-        <Pressable style={s.pill} onPress={() => setMenu("group")}>
-          <T size={13} weight="600">{current?.name ?? "Gruppe"} ▾</T>
+        <Pressable
+          style={s.pill}
+          onPress={() => setMenu("group")}
+          accessibilityRole="button"
+          accessibilityLabel={`${t.topBar.switchGroup}: ${current?.name ?? t.topBar.group}`}
+          hitSlop={8}
+        >
+          <T size={13} weight="600">{current?.name ?? t.topBar.group} ▾</T>
         </Pressable>
       )}
-      <Pressable onPress={() => setMenu("profile")} accessibilityLabel="Profil">
+      <Pressable
+        onPress={() => setMenu("profile")}
+        accessibilityRole="button"
+        accessibilityLabel={t.topBar.profile}
+        hitSlop={6}
+      >
         <View style={[s.me, { backgroundColor: avatarColor(user?.id ?? "") }]}>
           <T size={12} weight="700">{initials(user?.name ?? "")}</T>
         </View>
@@ -44,12 +56,12 @@ export function TopBar({ left }: { left?: ReactNode }) {
 
       <Sheet open={menu === "group"} onClose={close} side="left">
         {groups.data?.map((g) => (
-          <Item key={g.id} onPress={() => { setGroupId(g.id); close(); }} right={g.id === groupId ? "✓" : undefined}>
+          <Item key={g.id} onPress={() => { setGroupId(g.id); close(); }} selected={g.id === groupId} right={g.id === groupId ? "✓" : undefined}>
             {g.name}
           </Item>
         ))}
-        <Item onPress={() => go("/group/new")} right="+">Neue Gruppe</Item>
-        <Item onPress={() => go("/join")} right="›">Mit Code beitreten</Item>
+        <Item onPress={() => go("/group/new")} right="+">{t.topBar.newGroup}</Item>
+        <Item onPress={() => go("/join")} right="›">{t.topBar.join}</Item>
       </Sheet>
 
       <Sheet open={menu === "profile"} onClose={close} side="right">
@@ -59,12 +71,12 @@ export function TopBar({ left }: { left?: ReactNode }) {
         </View>
         {page.data && (
           <Item onPress={() => { close(); void shareInvite(page.data.group); }} right="›">
-            {`In ${page.data.group.name} einladen`}
+            {t.topBar.invite(page.data.group.name)}
           </Item>
         )}
-        <Item onPress={() => go("/group/new")} right="+">Neue Gruppe</Item>
-        <Item onPress={() => go("/account")} right="›">Account</Item>
-        <Item onPress={() => { close(); void authClient.signOut(); }} danger>Ausloggen</Item>
+        <Item onPress={() => go("/group/new")} right="+">{t.topBar.newGroup}</Item>
+        <Item onPress={() => go("/account")} right="›">{t.common.account}</Item>
+        <Item onPress={() => { close(); void authClient.signOut(); }} danger>{t.topBar.signOut}</Item>
       </Sheet>
     </View>
   );
@@ -77,17 +89,23 @@ function Sheet({ open, onClose, side, children }: { open: boolean; onClose: () =
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={[StyleSheet.absoluteFill, s.backdrop]} onPress={onClose} />
+      <Pressable style={[StyleSheet.absoluteFill, s.backdrop]} onPress={onClose} accessibilityRole="button" accessibilityLabel={t.common.close} />
       <View style={[s.sheet, { top: insets.top + 56 }, side === "left" ? { left: 14 } : { right: 14 }]}>{children}</View>
     </Modal>
   );
 }
 
-function Item({ children, onPress, right, danger }: { children: string; onPress: () => void; right?: string; danger?: boolean }) {
+/** Menu row. `right` is a decorative glyph (check, chevron), so it stays out of the spoken label. */
+function Item({ children, onPress, right, selected, danger }: { children: string; onPress: () => void; right?: string; selected?: boolean; danger?: boolean }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [s.item, pressed && { backgroundColor: c.faint }]}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={({ pressed }) => [s.item, pressed && { backgroundColor: c.faint }]}
+    >
       <T style={danger ? { color: c.neg } : undefined}>{children}</T>
-      {right ? <T tone="muted">{right}</T> : null}
+      {right ? <T tone="muted" importantForAccessibility="no">{right}</T> : null}
     </Pressable>
   );
 }

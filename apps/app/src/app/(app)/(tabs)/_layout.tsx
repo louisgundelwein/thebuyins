@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChartIcon, ChipIcon } from "@/components/icons";
 import { useSelectedGroup } from "@/lib/group";
+import { t } from "@/lib/i18n";
 import { useGroup } from "@/lib/queries";
 import { c } from "@/lib/theme";
 
@@ -12,13 +13,13 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>
 export default function TabsLayout() {
   return (
     <Tabs tabBar={(props) => <Dock {...props} />} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: c.bg } }}>
-      <Tabs.Screen name="index" options={{ title: "Übersicht" }} />
-      <Tabs.Screen name="live" options={{ title: "Live" }} />
+      <Tabs.Screen name="index" options={{ title: t.tab.overview }} />
+      <Tabs.Screen name="live" options={{ title: t.tab.live }} />
     </Tabs>
   );
 }
 
-/** Floating glass dock: Übersicht, a raised plus for a new game, and Live with a dot while a game runs. */
+/** Floating glass dock: overview, a raised plus for a new game, and Live with a dot while a game runs. */
 function Dock({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const { groupId } = useSelectedGroup();
@@ -29,28 +30,35 @@ function Dock({ state, navigation }: TabBarProps) {
   const tab = (name: "index" | "live", label: string, Icon: typeof ChartIcon, dot = false) => {
     const on = active === name;
     return (
-      <Pressable style={s.tab} onPress={() => navigation.navigate(name)} accessibilityRole="tab" accessibilityState={{ selected: on }}>
-        <View>
+      <Pressable
+        style={s.tab}
+        onPress={() => navigation.navigate(name)}
+        accessibilityRole="tab"
+        accessibilityLabel={dot ? `${label}, ${t.tab.running}` : label}
+        accessibilityState={{ selected: on }}
+      >
+        <View importantForAccessibility="no" accessibilityElementsHidden>
           <Icon color={on ? c.accent : "rgba(255,255,255,0.5)"} />
           {dot && <View style={s.dot} />}
         </View>
-        <Text style={[s.label, on && { color: c.text }]}>{label}</Text>
+        <Text maxFontSizeMultiplier={1.4} style={[s.label, on && { color: c.text }]}>{label}</Text>
       </Pressable>
     );
   };
 
   return (
     <View style={[s.dock, { bottom: Math.max(insets.bottom, 12) + 4 }]} pointerEvents="box-none">
-      {tab("index", "Übersicht", ChartIcon)}
+      {tab("index", t.tab.overview, ChartIcon)}
       <Pressable
         style={({ pressed }) => [s.plus, pressed && { opacity: 0.85 }]}
         disabled={!groupId}
         onPress={() => groupId && router.push({ pathname: "/game/new", params: { groupId } })}
-        accessibilityLabel="Neues Spiel"
+        accessibilityRole="button"
+        accessibilityLabel={t.tab.newGame}
       >
-        <Text style={s.plusText}>+</Text>
+        <Text style={s.plusText} importantForAccessibility="no">+</Text>
       </Pressable>
-      {tab("live", "Live", ChipIcon, hasLive)}
+      {tab("live", t.tab.live, ChipIcon, hasLive)}
     </View>
   );
 }

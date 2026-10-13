@@ -13,6 +13,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { t } from "@/lib/i18n";
 import { avatarColor, c, radius } from "@/lib/theme";
 
 /** Height kept free at the bottom of tab screens for the floating dock. */
@@ -60,8 +61,11 @@ export function Tile({ label, value, tone }: { label: string; value: string; ton
   );
 }
 
-export const Row = ({ children, dim }: { children: ReactNode; dim?: boolean }) => (
-  <View style={[s.row, dim && { opacity: 0.55 }]}>{children}</View>
+/** List row. Pass `label` to read the whole row as one element, e.g. "Alex, 20 € buy-in, balance +25 €". */
+export const Row = ({ children, dim, label }: { children: ReactNode; dim?: boolean; label?: string }) => (
+  <View accessible={label !== undefined} accessibilityLabel={label} style={[s.row, dim && { opacity: 0.55 }]}>
+    {children}
+  </View>
 );
 
 /**
@@ -72,6 +76,9 @@ export function Avatar({ id, name, guest, size = 34 }: { id: string; name: strin
   const initials = name.split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
   return (
     <View
+      accessible={false}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={[
         s.avatar,
         { width: size, height: size, borderRadius: size / 2 },
@@ -84,12 +91,13 @@ export function Avatar({ id, name, guest, size = 34 }: { id: string; name: strin
   );
 }
 
-export function Button({ title, onPress, variant = "primary", disabled, loading }: {
+export function Button({ title, onPress, variant = "primary", disabled, loading, selected }: {
   title: string;
   onPress: () => void;
   variant?: "primary" | "ghost" | "soft";
   disabled?: boolean;
   loading?: boolean;
+  selected?: boolean;
 }) {
   const bg = variant === "primary" ? c.accent : variant === "soft" ? c.accentSoft : c.faint;
   const fg = variant === "primary" ? c.onAccent : variant === "soft" ? "#c4b5fd" : c.text;
@@ -97,17 +105,30 @@ export function Button({ title, onPress, variant = "primary", disabled, loading 
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading, busy: loading, selected }}
       style={({ pressed }) => [s.button, { backgroundColor: bg, opacity: disabled ? 0.4 : pressed ? 0.8 : 1 }]}
     >
-      {loading ? <ActivityIndicator color={fg} /> : <Text style={{ color: fg, fontWeight: "700", fontSize: 15 }}>{title}</Text>}
+      {loading ? (
+        <ActivityIndicator color={fg} accessibilityLabel={t.common.loading} />
+      ) : (
+        <Text maxFontSizeMultiplier={1.6} style={{ color: fg, fontWeight: "700", fontSize: 15 }}>{title}</Text>
+      )}
     </Pressable>
   );
 }
 
-/** Small inline action, e.g. the "+20" rebuy chip. */
-export function Chip({ title, onPress, active }: { title: string; onPress?: () => void; active?: boolean }) {
+/** Small inline action, e.g. the "+20" rebuy chip. `label` overrides the spoken title when it's cryptic. */
+export function Chip({ title, label, onPress, active }: { title: string; label?: string; onPress?: () => void; active?: boolean }) {
   return (
-    <Pressable onPress={onPress} style={[s.chip, active && { backgroundColor: c.accent }]}>
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
+      style={[s.chip, active && { backgroundColor: c.accent }]}
+    >
       <Text style={{ color: active ? c.onAccent : "#c4b5fd", fontWeight: "700", fontSize: 13 }}>{title}</Text>
     </Pressable>
   );
@@ -118,7 +139,7 @@ export function Field(props: TextInputProps & { label?: string }) {
   return (
     <View style={{ gap: 6 }}>
       {label ? <T tone="muted" size={12}>{label}</T> : null}
-      <TextInput placeholderTextColor="rgba(255,255,255,0.35)" {...rest} style={[s.field, style]} />
+      <TextInput accessibilityLabel={label} placeholderTextColor="rgba(255,255,255,0.5)" {...rest} style={[s.field, style]} />
     </View>
   );
 }
@@ -140,7 +161,7 @@ export function Notice({ children }: { children: ReactNode }) {
 
 export const Loading = () => (
   <Screen>
-    <ActivityIndicator color={c.accent} style={{ marginTop: 80 }} />
+    <ActivityIndicator color={c.accent} style={{ marginTop: 80 }} accessibilityLabel={t.common.loading} />
   </Screen>
 );
 
