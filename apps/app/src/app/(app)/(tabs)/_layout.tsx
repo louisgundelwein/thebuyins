@@ -4,13 +4,14 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChartIcon, ChipIcon } from "@/components/icons";
 import { useSelectedGroup } from "@/lib/group";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language";
 import { useGroup } from "@/lib/queries";
 import { c } from "@/lib/theme";
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
 export default function TabsLayout() {
+  const { t } = useLanguage();
   return (
     <Tabs tabBar={(props) => <Dock {...props} />} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: c.bg } }}>
       <Tabs.Screen name="index" options={{ title: t.tab.overview }} />
@@ -21,6 +22,7 @@ export default function TabsLayout() {
 
 /** Floating glass dock: overview, a raised plus for a new game, and Live with a dot while a game runs. */
 function Dock({ state, navigation }: TabBarProps) {
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const { groupId } = useSelectedGroup();
   const page = useGroup(groupId);

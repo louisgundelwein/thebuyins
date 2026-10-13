@@ -3,11 +3,12 @@ import { router } from "expo-router";
 import { parseResponse } from "hono/client";
 import { useState, type ReactNode } from "react";
 import { Pressable, Share, View } from "react-native";
-import { Avatar, Button, Chip, Field, Heading, Hero, Loading, Notice, Row, Screen, T, Tile, toneOf } from "@/components/ui";
+import { CloseIcon } from "@/components/icons";
+import { Avatar, Button, Chip, Field, Heading, Hero, Loading, Notice, PAGE_TOP, Row, Screen, T, Tile, toneOf } from "@/components/ui";
 import { api, type GameState } from "@/lib/api";
 import { authClient } from "@/lib/auth";
-import { t, locale } from "@/lib/i18n";
-import { money, parseCents, signedMoney } from "@/lib/money";
+import { useLanguage } from "@/lib/language";
+import { parseCents } from "@/lib/money";
 import { keys, useGame, useGameMutation, useGroup } from "@/lib/queries";
 import { c } from "@/lib/theme";
 
@@ -29,7 +30,7 @@ export function GameView({ id, ...frame }: { id: string } & Frame) {
 }
 
 /** Space under the transparent stack header when there's no top bar. */
-const topGap = (frame: Frame) => (frame.header ? 4 : 44);
+const topGap = (frame: Frame) => (frame.header ? 8 : PAGE_TOP);
 
 function useTotals(state: GameState) {
   const bySeat = (seatId: string) => state.buyIns.filter((b) => b.seatId === seatId);
@@ -39,6 +40,7 @@ function useTotals(state: GameState) {
 }
 
 function Table({ state, frame, onSettle }: { state: GameState; frame: Frame; onSettle: () => void }) {
+  const { t, locale, money } = useLanguage();
   const { game, seats, summary } = state;
   const { bySeat } = useTotals(state);
   const group = useGroup(game.groupId);
@@ -116,10 +118,9 @@ function Table({ state, frame, onSettle }: { state: GameState; frame: Frame; onS
             onPress={() => undo.mutate(b.id)}
             accessibilityRole="button"
             accessibilityLabel={t.game.undo(seatName(b.seatId), money(b.amountCents))}
-            hitSlop={8}
-            style={{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+            hitSlop={12}
           >
-            <T tone="muted" importantForAccessibility="no">✕</T>
+            <CloseIcon color={c.muted} size={14} />
           </Pressable>
         </Row>
       ))}
@@ -131,6 +132,7 @@ function Table({ state, frame, onSettle }: { state: GameState; frame: Frame; onS
 
 /** Admin-only: deletes the game and its buy-ins after confirmation. Renders nothing for other members. */
 function DeleteGame({ state, frame }: { state: GameState; frame: Frame }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState(false);
   const { game } = state;
@@ -164,6 +166,7 @@ function DeleteGame({ state, frame }: { state: GameState; frame: Frame }) {
 }
 
 function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBack: () => void }) {
+  const { t, money } = useLanguage();
   const { game, seats, summary, transfers } = state;
   const { bySeat, nameOf } = useTotals(state);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -204,7 +207,7 @@ function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBa
         <Notice>{t.settle.difference(money(summary.cashedOutCents), money(summary.potCents), money(Math.abs(diff)))}</Notice>
       )}
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 8 }}>
         {seats.map((s) => (
           <View key={s.id} style={{ width: "48%", flexGrow: 1 }}>
             <Field
@@ -234,6 +237,7 @@ function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBa
 }
 
 function Result({ state, frame }: { state: GameState; frame: Frame }) {
+  const { t, money, signedMoney } = useLanguage();
   const { game, summary, transfers } = state;
   const { nameOf } = useTotals(state);
   const winner = summary.players[0];
@@ -288,6 +292,7 @@ function Result({ state, frame }: { state: GameState; frame: Frame }) {
 }
 
 function Transfer({ from, to, cents, nameOf }: { from: string; to: string; cents: number; nameOf: (id: string) => string }) {
+  const { t, money } = useLanguage();
   return (
     <Row label={t.settle.transferRow(nameOf(from), nameOf(to), money(cents))}>
       <Avatar id={from} name={nameOf(from)} />

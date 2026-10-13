@@ -4,10 +4,10 @@ import { parseResponse } from "hono/client";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { AuthForm } from "@/components/auth-form";
-import { Avatar, Button, Chip, Field, Heading, Hero, Notice, Row, Screen, T } from "@/components/ui";
+import { Avatar, Button, Field, Heading, Hero, Notice, PAGE_TOP, Row, Screen, T } from "@/components/ui";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language";
 import { keys } from "@/lib/queries";
 
 /**
@@ -17,12 +17,13 @@ import { keys } from "@/lib/queries";
 export default function Join() {
   const { code } = useLocalSearchParams<{ code?: string }>();
   const { data: session } = authClient.useSession();
+  const { t } = useLanguage();
 
   if (session) return <JoinGroup initialCode={code ?? ""} />;
 
   return (
     <Screen>
-      <Hero style={{ marginTop: 40, alignItems: "center", paddingVertical: 32 }}>
+      <Hero style={{ marginTop: PAGE_TOP, alignItems: "center", paddingVertical: 32 }}>
         <T size={32} weight="800">{t.join.invitation}</T>
         <T tone="muted" style={{ textAlign: "center" }}>{t.join.signInText}</T>
       </Hero>
@@ -33,6 +34,7 @@ export default function Join() {
 
 /** Join a group by invite code. If the host already added you as a guest, you can take over that history. */
 function JoinGroup({ initialCode }: { initialCode: string }) {
+  const { t } = useLanguage();
   const [code, setCode] = useState(initialCode);
   const [claim, setClaim] = useState<string>();
   const qc = useQueryClient();
@@ -57,10 +59,7 @@ function JoinGroup({ initialCode }: { initialCode: string }) {
 
   return (
     <Screen footer={<Button title={t.join.join} disabled={!invite.data} loading={join.isPending} onPress={() => join.mutate()} />}>
-      <View style={{ flexDirection: "row", marginTop: 8 }}>
-        <Chip title={`‹ ${t.common.back}`} label={t.common.back} onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
-      </View>
-      <T size={28} weight="800" style={{ marginTop: 16 }}>{t.join.title}</T>
+      <T size={28} weight="800" style={{ marginTop: PAGE_TOP }}>{t.join.title}</T>
       <Field label={t.join.code} value={code} onChangeText={(v) => setCode(v.toUpperCase())} autoCapitalize="characters" maxLength={6} placeholder="K7Q2XZ" />
       {invite.isError && <Notice>{t.join.unknownCode}</Notice>}
       {join.isError && <Notice>{join.error.message}</Notice>}

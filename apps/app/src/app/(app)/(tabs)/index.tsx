@@ -2,13 +2,14 @@ import { Link, router } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { BalanceChart } from "@/components/balance-chart";
+import { ChevronIcon } from "@/components/icons";
 import { TopBar } from "@/components/top-bar";
 import { Avatar, Button, Chip, Heading, Hero, Loading, Row, Screen, T, toneOf } from "@/components/ui";
 import { authClient } from "@/lib/auth";
 import { useSelectedGroup } from "@/lib/group";
-import { t, locale } from "@/lib/i18n";
-import { money, signedMoney } from "@/lib/money";
+import { useLanguage } from "@/lib/language";
 import { useGroup, useGroups } from "@/lib/queries";
+import { c } from "@/lib/theme";
 
 const RANGES = [
   { key: "m1", days: 31 },
@@ -19,10 +20,11 @@ const RANGES = [
 type Range = (typeof RANGES)[number]["key"];
 
 const DAY = 86_400_000;
-const date = (iso: string) => new Date(iso).toLocaleDateString(locale, { weekday: "short", day: "2-digit", month: "2-digit" });
+const date = (iso: string, locale: string) => new Date(iso).toLocaleDateString(locale, { weekday: "short", day: "2-digit", month: "2-digit" });
 
 /** Overview tab: your balance as a stock-style chart, your game history and the group standings. */
 export default function Overview() {
+  const { t, locale, money, signedMoney } = useLanguage();
   const groups = useGroups();
   const { groupId } = useSelectedGroup();
   const page = useGroup(groupId);
@@ -59,15 +61,15 @@ export default function Overview() {
       <Hero>
         <T tone="muted" size={13}>{t.overview.balance}</T>
         <T size={40} weight="800" tone={toneOf(running)}>{signedMoney(running)}</T>
-        <T size={13} tone="muted">
-          {last ? (
-            <>
-              <T size={13} tone={toneOf(last.netCents)}>{last.netCents >= 0 ? "▲" : "▼"} {money(Math.abs(last.netCents))}</T> {t.overview.lastGame}
-            </>
-          ) : (
-            t.overview.noGames
-          )}
-        </T>
+        {last ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <ChevronIcon direction={last.netCents >= 0 ? "up" : "down"} size={12} color={last.netCents >= 0 ? c.pos : c.neg} />
+            <T size={13} tone={toneOf(last.netCents)}>{money(Math.abs(last.netCents))}</T>
+            <T size={13} tone="muted">{t.overview.lastGame}</T>
+          </View>
+        ) : (
+          <T size={13} tone="muted">{t.overview.noGames}</T>
+        )}
         <BalanceChart points={points} />
         <View style={{ flexDirection: "row", gap: 6 }}>
           {RANGES.map((r) => (
@@ -81,11 +83,11 @@ export default function Overview() {
           <Heading title={t.overview.history} right={<T tone="muted" size={12}>{t.overview.games(history.length)}</T>} />
           {[...history].reverse().map((h) => (
             <Link key={h.gameId} href={`/game/${h.gameId}`} asChild>
-              <Pressable accessibilityRole="button" accessibilityLabel={[h.title, date(h.startedAt), t.overview.placeOf(h.rank, h.players), signedMoney(h.netCents)].join(", ")}>
+              <Pressable accessibilityRole="button" accessibilityLabel={[h.title, date(h.startedAt, locale), t.overview.placeOf(h.rank, h.players), signedMoney(h.netCents)].join(", ")}>
                 <Row>
                   <View style={{ flex: 1 }}>
                     <T>{h.title}</T>
-                    <T tone="muted" size={12}>{date(h.startedAt)} · {t.overview.placeOf(h.rank, h.players)}</T>
+                    <T tone="muted" size={12}>{date(h.startedAt, locale)} · {t.overview.placeOf(h.rank, h.players)}</T>
                   </View>
                   <T weight="700" tone={toneOf(h.netCents)}>{signedMoney(h.netCents)}</T>
                 </Row>

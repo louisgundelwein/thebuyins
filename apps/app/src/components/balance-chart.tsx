@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { View } from "react-native";
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
-import { signedMoney } from "@/lib/money";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language";
 import { c } from "@/lib/theme";
 
 /**
@@ -10,6 +9,7 @@ import { c } from "@/lib/theme";
  * a leading 0 is added so the line starts at the baseline. Colour follows the final sign.
  */
 export function BalanceChart({ points, height = 120 }: { points: readonly number[]; height?: number }) {
+  const { t, signedMoney } = useLanguage();
   const [width, setWidth] = useState(0);
   const values = [0, ...points];
   const min = Math.min(0, ...values);

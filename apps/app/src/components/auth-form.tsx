@@ -2,19 +2,16 @@ import { useState } from "react";
 import { View } from "react-native";
 import { Button, Field, Notice } from "@/components/ui";
 import { authClient } from "@/lib/auth";
-import { t, type Dict } from "@/lib/i18n";
+import { dictionaries, type Dict } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language";
 
-const modes = [
-  ["sign-in", t.auth.login],
-  ["sign-up", t.auth.signUp],
-] as const;
-type Mode = (typeof modes)[number][0];
+type Mode = "sign-in" | "sign-up";
 
 type AuthCode = keyof Dict["auth"]["errors"];
-const isAuthCode = (code: string | undefined): code is AuthCode => code !== undefined && code in t.auth.errors;
+const isAuthCode = (code: string | undefined): code is AuthCode => code !== undefined && code in dictionaries.de.auth.errors;
 
 /** Localized copy for a Better Auth error. Unknown codes get a generic line, never the server's English text. */
-export function authErrorMessage(error: { code?: string }) {
+export function authErrorMessage(error: { code?: string }, t: Dict) {
   return isAuthCode(error.code) ? t.auth.errors[error.code] : t.common.failed;
 }
 
@@ -23,6 +20,11 @@ export function authErrorMessage(error: { code?: string }) {
  * updates and whichever screen hosts the form re-renders (or the root guards redirect).
  */
 export function AuthForm() {
+  const { t } = useLanguage();
+  const modes = [
+    ["sign-in", t.auth.login],
+    ["sign-up", t.auth.signUp],
+  ] as const;
   const [mode, setMode] = useState<Mode>("sign-in");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,7 +38,7 @@ export function AuthForm() {
     setMessage(null);
     const { error } = signUp ? await authClient.signUp.email({ name, email, password }) : await authClient.signIn.email({ email, password });
     setBusy(false);
-    if (error) setMessage(authErrorMessage(error));
+    if (error) setMessage(authErrorMessage(error, t));
   }
 
   return (

@@ -4,11 +4,11 @@ import { parseResponse } from "hono/client";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { SeatingTable } from "@/components/seating-table";
-import { Avatar, Button, Chip, Field, Loading, Notice, Screen, T } from "@/components/ui";
+import { Avatar, Button, Chip, Field, Loading, Notice, PAGE_TOP, Screen, T } from "@/components/ui";
 import { api } from "@/lib/api";
-import { t, locale } from "@/lib/i18n";
 import { shareInvite } from "@/lib/invite";
-import { money, parseCents } from "@/lib/money";
+import { useLanguage } from "@/lib/language";
+import { parseCents } from "@/lib/money";
 import { useGroup } from "@/lib/queries";
 import { c } from "@/lib/theme";
 
@@ -31,6 +31,7 @@ const chunk = <T,>(items: readonly T[], size: number) =>
  * Starting sends the drawn order; the server seats players in that order and seat 1 deals first.
  */
 export default function NewGame() {
+  const { t, locale, money } = useLanguage();
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const page = useGroup(groupId);
   const qc = useQueryClient();
@@ -159,6 +160,7 @@ export default function NewGame() {
                 >
                   <Avatar id="add" name="+" guest size={46} />
                   <T tone="muted">{t.common.guest}</T>
+                  <View style={s.tagSpacer} />
                 </Pressable>
               );
             if (!m) return <View key={`empty-${col}`} style={{ flex: 1 }} />;
@@ -205,7 +207,7 @@ export default function NewGame() {
               size={13}
               weight="700"
               style={{ color: "#c4b5fd" }}
-              onPress={() => void shareInvite(group).then((r) => setCopied(r === "copied"))}
+              onPress={() => void shareInvite(group, t).then((r) => setCopied(r === "copied"))}
             >
               {copied ? t.newGame.linkCopied : t.newGame.shareInvite}
             </T>
@@ -219,15 +221,16 @@ export default function NewGame() {
 }
 
 const s = StyleSheet.create({
-  top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 48, marginBottom: 2 },
+  top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: PAGE_TOP, marginBottom: 2 },
   fields: { flexDirection: "row", gap: 8, alignItems: "center" },
   footer: { flexDirection: "row", gap: 10 },
   gridRow: { flexDirection: "row", gap: 10 },
   tile: { flex: 1, alignItems: "center", gap: 6, paddingVertical: 14, paddingHorizontal: 6, borderRadius: 18, borderWidth: 2 },
   tileOn: { backgroundColor: "rgba(255,255,255,0.04)", borderColor: c.accent },
-  tileOff: { backgroundColor: "rgba(255,255,255,0.04)", borderColor: "transparent", opacity: 0.5 },
+  tileOff: { backgroundColor: "rgba(255,255,255,0.04)", borderColor: "transparent" },
   addTile: { borderWidth: 1.5, borderStyle: "dashed", borderColor: "rgba(255,255,255,0.15)" },
   tag: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, backgroundColor: c.faint },
   tagAccount: { backgroundColor: "rgba(94,234,212,0.14)" },
+  tagSpacer: { height: 18 },
   hint: { borderRadius: 18, padding: 12, backgroundColor: c.accentSoft, marginTop: 2 },
 });

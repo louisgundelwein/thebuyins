@@ -2,10 +2,11 @@ import { getLocales } from "expo-localization";
 
 /**
  * German is the source of truth. `en` is typed as the same shape, so a missing or extra key
- * fails typecheck. Pick the language once per launch from the device: "de" gets German, everything else English.
+ * fails typecheck. The active dictionary comes from `useLanguage()` (see lib/language.tsx).
  */
 const de = {
   tab: { overview: "Übersicht", live: "Live", newGame: "Neues Spiel", running: "Spiel läuft" },
+  language: { title: "Sprache", system: "System", de: "Deutsch", en: "English" },
   common: {
     back: "Zurück",
     loading: "Lädt…",
@@ -144,7 +145,7 @@ const de = {
     join: "Beitreten",
   },
   auth: {
-    login: "Login",
+    login: "Einloggen",
     signUp: "Registrieren",
     namePlaceholder: "Wie dich die Runde nennt",
     email: "E-Mail",
@@ -186,7 +187,7 @@ const de = {
       { heading: "Wofür", body: "Ausschließlich, um die App bereitzustellen: Anmeldung, Spiele erfassen und Abrechnungen innerhalb deiner Gruppen anzeigen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO." },
       { heading: "Was wir nicht tun", body: "Keine Werbung, kein Tracking, keine Analyse-Tools, kein Verkauf von Daten. Die App wickelt keine Zahlungen ab." },
       { heading: "Wer die Daten sieht", body: "Mitglieder deiner Gruppen sehen deinen Namen und deine Spielergebnisse. Die Daten liegen auf Servern in der EU." },
-      { heading: "Deine Rechte", body: "Du kannst deinen Account jederzeit in der App unter Profil, Account löschen. Für Auskunft, Berichtigung oder Löschung erreichst du uns unter der oben genannten E-Mail-Adresse. Du hast außerdem ein Beschwerderecht bei einer Datenschutzaufsichtsbehörde." },
+      { heading: "Deine Rechte", body: "Du kannst deinen Account jederzeit in der App unter Profil, Account, Account löschen. Für Auskunft, Berichtigung oder Löschung erreichst du uns unter der oben genannten E-Mail-Adresse. Du hast außerdem ein Beschwerderecht bei einer Datenschutzaufsichtsbehörde." },
     ],
   },
 };
@@ -195,6 +196,7 @@ export type Dict = typeof de;
 
 const en: Dict = {
   tab: { overview: "Overview", live: "Live", newGame: "New game", running: "game running" },
+  language: { title: "Language", system: "System", de: "Deutsch", en: "English" },
   common: {
     back: "Back",
     loading: "Loading…",
@@ -375,15 +377,23 @@ const en: Dict = {
       { heading: "Why", body: "Solely to provide the app: sign-in, recording games and showing settlements within your groups. The legal basis is Art. 6 (1) (b) GDPR." },
       { heading: "What we do not do", body: "No advertising, no tracking, no analytics tools, no selling of data. The app does not process payments." },
       { heading: "Who sees the data", body: "Members of your groups see your name and your game results. The data is stored on servers in the EU." },
-      { heading: "Your rights", body: "You can delete your account at any time in the app under Profile, Delete account. For information, correction or deletion, contact us at the email address above. You also have the right to lodge a complaint with a data protection supervisory authority." },
+      { heading: "Your rights", body: "You can delete your account at any time in the app under Profile, Account, Delete account. For information, correction or deletion, contact us at the email address above. You also have the right to lodge a complaint with a data protection supervisory authority." },
     ],
   },
 };
 
-const isGerman = getLocales()[0].languageCode === "de";
+/** What the user can pick. "system" follows the device language. */
+export const languageChoices = ["system", "de", "en"] as const;
+export type LanguageChoice = (typeof languageChoices)[number];
+export type Language = Exclude<LanguageChoice, "system">;
 
-/** All user-visible strings for the device language. */
-export const t: Dict = isGerman ? de : en;
+/** "system" picks German for a German device and English for everything else. */
+export function resolveLanguage(choice: LanguageChoice): Language {
+  if (choice !== "system") return choice;
+  return getLocales()[0].languageCode === "de" ? "de" : "en";
+}
 
-/** BCP 47 tag for Intl and toLocale* formatting. */
-export const locale = isGerman ? "de-DE" : "en-US";
+export const dictionaries: Record<Language, Dict> = { de, en };
+
+/** BCP 47 tags for Intl and toLocale* formatting. */
+export const localeTags: Record<Language, string> = { de: "de-DE", en: "en-US" };

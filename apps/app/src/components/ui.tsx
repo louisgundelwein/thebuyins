@@ -2,6 +2,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,25 +15,32 @@ import {
   type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language";
 import { avatarColor, c, radius } from "@/lib/theme";
+import { CloseIcon } from "./icons";
 
-/** Height kept free at the bottom of tab screens for the floating dock. */
+/** Height kept free at the bottom of tab screens for the floating dock. Content scrolls up to it. */
 export const DOCK_SPACE = 92;
+
+/** Top offset of page titles under the transparent stack header, so every screen's title lines up. */
+export const PAGE_TOP = 48;
 
 /**
  * Scrollable page with the violet top glow. Content is capped in width so web stays phone-shaped.
- * Tab screens pass `dock` so content and footer stay above the floating tab bar.
+ * Tab screens pass `dock` so content scrolls up to the floating tab bar. The footer stays pinned
+ * and lifts above the keyboard.
  */
 export function Screen({ children, footer, dock }: { children: ReactNode; footer?: ReactNode; dock?: boolean }) {
   return (
     <LinearGradient colors={[c.bgTop, c.bg]} locations={[0, 0.45]} style={s.fill}>
-      <SafeAreaView style={[s.fill, dock && { paddingBottom: DOCK_SPACE }]} edges={["top", "bottom"]}>
-        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
-          <View style={s.column}>{children}</View>
-        </ScrollView>
-        {footer ? <View style={[s.column, s.footer]}>{footer}</View> : null}
-      </SafeAreaView>
+      <KeyboardAvoidingView style={s.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <SafeAreaView style={s.fill} edges={["top", "bottom"]}>
+          <ScrollView contentContainerStyle={[s.scroll, dock && { paddingBottom: DOCK_SPACE }]} keyboardShouldPersistTaps="handled">
+            <View style={s.column}>{children}</View>
+          </ScrollView>
+          {footer ? <View style={[s.column, s.footer]}>{footer}</View> : null}
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }
@@ -99,15 +108,17 @@ export function Button({ title, onPress, variant = "primary", disabled, loading,
   loading?: boolean;
   selected?: boolean;
 }) {
-  const bg = variant === "primary" ? c.accent : variant === "soft" ? c.accentSoft : c.faint;
-  const fg = variant === "primary" ? c.onAccent : variant === "soft" ? "#c4b5fd" : c.text;
+  const { t } = useLanguage();
+  // Disabled drops to a neutral fill with muted text, so the label stays readable.
+  const bg = disabled ? c.faint : variant === "primary" ? c.accent : variant === "soft" ? c.accentSoft : c.faint;
+  const fg = disabled ? c.muted : variant === "primary" ? c.onAccent : variant === "soft" ? "#c4b5fd" : c.text;
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || loading, busy: loading, selected }}
-      style={({ pressed }) => [s.button, { backgroundColor: bg, opacity: disabled ? 0.4 : pressed ? 0.8 : 1 }]}
+      style={({ pressed }) => [s.button, { backgroundColor: bg, opacity: pressed ? 0.8 : 1 }]}
     >
       {loading ? (
         <ActivityIndicator color={fg} accessibilityLabel={t.common.loading} />
@@ -151,6 +162,16 @@ export const Heading = ({ title, right }: { title: string; right?: ReactNode }) 
   </View>
 );
 
+/** Dismiss control for modals. Sits in the native header, so it gets the header's hit area. */
+export function CloseButton({ onPress }: { onPress: () => void }) {
+  const { t } = useLanguage();
+  return (
+    <Pressable onPress={onPress} hitSlop={12} accessibilityRole="button" accessibilityLabel={t.common.close}>
+      <CloseIcon color={c.text} size={18} strokeWidth={2.2} />
+    </Pressable>
+  );
+}
+
 export function Notice({ children }: { children: ReactNode }) {
   return (
     <View style={s.notice}>
@@ -159,11 +180,14 @@ export function Notice({ children }: { children: ReactNode }) {
   );
 }
 
-export const Loading = () => (
-  <Screen>
-    <ActivityIndicator color={c.accent} style={{ marginTop: 80 }} accessibilityLabel={t.common.loading} />
-  </Screen>
-);
+export const Loading = () => {
+  const { t } = useLanguage();
+  return (
+    <Screen>
+      <ActivityIndicator color={c.accent} style={{ marginTop: 80 }} accessibilityLabel={t.common.loading} />
+    </Screen>
+  );
+};
 
 const s = StyleSheet.create({
   fill: { flex: 1 },

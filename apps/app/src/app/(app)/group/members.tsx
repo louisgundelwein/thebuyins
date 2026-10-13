@@ -2,11 +2,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
-import { Avatar, Heading, Loading, Notice, Row, Screen, T } from "@/components/ui";
+import { Avatar, Heading, Loading, Notice, PAGE_TOP, Row, Screen, T } from "@/components/ui";
 import { api, type GroupPage } from "@/lib/api";
 import { authClient } from "@/lib/auth";
 import { useSelectedGroup } from "@/lib/group";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language";
 import { useGroup } from "@/lib/queries";
 
 type Member = GroupPage["members"][number];
@@ -16,6 +16,7 @@ type Member = GroupPage["members"][number];
  * played can't be removed because their results would go with them.
  */
 export default function Members() {
+  const { t } = useLanguage();
   const { groupId } = useSelectedGroup();
   const page = useGroup(groupId);
   const qc = useQueryClient();
@@ -37,7 +38,7 @@ export default function Members() {
 
   return (
     <Screen>
-      <T size={28} weight="800" style={{ marginTop: 48 }}>{t.members.title}</T>
+      <T size={28} weight="800" style={{ marginTop: PAGE_TOP }}>{t.members.title}</T>
       <Heading title={t.members.count(members.length)} />
       {members.map((m) => (
         <Row key={m.id}>

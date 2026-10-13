@@ -4,11 +4,12 @@ import { GameView } from "@/components/game-view";
 import { TopBar } from "@/components/top-bar";
 import { Button, Chip, Loading, Screen, T } from "@/components/ui";
 import { useSelectedGroup } from "@/lib/group";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language";
 import { useGroup } from "@/lib/queries";
 
 /** The group's running game, or an empty state pointing at the plus button. */
 export default function Live() {
+  const { t } = useLanguage();
   const { groupId } = useSelectedGroup();
   const page = useGroup(groupId);
   if (groupId && page.isPending) return <Loading />;

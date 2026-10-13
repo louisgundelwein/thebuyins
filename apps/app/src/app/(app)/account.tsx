@@ -1,12 +1,13 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Button, Field, Heading, Notice, Row, Screen, T } from "@/components/ui";
+import { Button, Field, Heading, Notice, PAGE_TOP, Row, Screen, T } from "@/components/ui";
 import { authErrorMessage } from "@/components/auth-form";
 import { authClient } from "@/lib/auth";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language";
 
 /** Account details and self-service deletion (required by App Store and Google Play). */
 export default function Account() {
+  const { t } = useLanguage();
   const { data: session } = authClient.useSession();
   const [password, setPassword] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -18,12 +19,12 @@ export default function Account() {
     setError(null);
     const res = await authClient.deleteUser({ password });
     setBusy(false);
-    if (res.error) setError(authErrorMessage(res.error));
+    if (res.error) setError(authErrorMessage(res.error, t));
   }
 
   return (
     <Screen>
-      <T size={28} weight="800" style={{ marginTop: 48 }}>{t.account.title}</T>
+      <T size={28} weight="800" style={{ marginTop: PAGE_TOP }}>{t.account.title}</T>
       <Row>
         <T style={{ flex: 1 }}>{session?.user.name}</T>
         <T tone="muted" size={13}>{session?.user.email}</T>
