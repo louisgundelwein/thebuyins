@@ -16,13 +16,15 @@ export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
   await next();
 });
 
-/** Returns the caller's membership in a group, or throws 404 so non-members can't probe ids. */
+/** The caller's member row in a group, including one they left. Undefined if they never joined. */
+export async function memberOf(userId: string, groupId: string) {
+  return db.query.member.findFirst({ where: and(eq(member.groupId, groupId), eq(member.userId, userId)) });
+}
+
+/** Returns the caller's active membership, or throws 404 so non-members and former members can't probe ids. */
 export async function membershipOf(userId: string, groupId: string) {
-  const [row] = await db
-    .select()
-    .from(member)
-    .where(and(eq(member.groupId, groupId), eq(member.userId, userId)));
-  if (!row) throw new HTTPException(404, { message: "Gruppe nicht gefunden" });
+  const row = await memberOf(userId, groupId);
+  if (!row || row.leftAt) throw new HTTPException(404, { message: "Gruppe nicht gefunden" });
   return row;
 }
 

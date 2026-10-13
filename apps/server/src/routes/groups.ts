@@ -1,12 +1,12 @@
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq, exists, getTableColumns, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, exists, getTableColumns, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../db";
 import { buyIn, game, group, member, seat } from "../db/schema/poker";
-import { adminOf, membershipOf, requireUser, type AppEnv } from "../middleware";
-import { finishedResults, historyOf, leaderboard } from "../stats";
+import { adminOf, memberOf, membershipOf, requireUser, type AppEnv } from "../middleware";
+import { archiveOf, finishedResults, historyOf, leaderboard } from "../stats";
 
 const cents = z.number().int().positive();
 
@@ -14,6 +14,24 @@ const cents = z.number().int().positive();
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const newInviteCode = () =>
   Array.from(crypto.getRandomValues(new Uint32Array(6)), (n) => CODE_ALPHABET[n % CODE_ALPHABET.length]).join("");
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Takes a member out of the group without touching their results. If they were the last admin,
+ * the oldest account member still in the group takes over.
+ */
+async function leaveGroup(tx: Tx, m: typeof member.$inferSelect) {
+  await tx.update(member).set({ leftAt: new Date(), role: "member" }).where(eq(member.id, m.id));
+  if (m.role !== "admin") return;
+  const [successor] = await tx
+    .select({ id: member.id })
+    .from(member)
+    .where(and(eq(member.groupId, m.groupId), isNull(member.leftAt), isNotNull(member.userId)))
+    .orderBy(member.createdAt)
+    .limit(1);
+  if (successor) await tx.update(member).set({ role: "admin" }).where(eq(member.id, successor.id));
+}
 
 async function groupByCode(code: string) {
   const g = await db.query.group.findFirst({ where: eq(group.inviteCode, code.toUpperCase()) });
@@ -30,7 +48,7 @@ export const groupRoutes = new Hono<AppEnv>()
       .select({ id: group.id, name: group.name, role: member.role })
       .from(member)
       .innerJoin(group, eq(group.id, member.groupId))
-      .where(eq(member.userId, c.var.user.id))
+      .where(and(eq(member.userId, c.var.user.id), isNull(member.leftAt)))
       .orderBy(group.createdAt);
     return c.json(rows);
   })
@@ -50,7 +68,10 @@ export const groupRoutes = new Hono<AppEnv>()
     },
   )
 
-  /** Group page: members (`played` = has sat at a game), games, standings (`season` is a year or "all") and the caller's game history. */
+  /**
+   * Group page: active members (`played` = has sat at a game), former members (kept for their
+   * names in standings), games, standings (`season` is a year or "all") and the caller's game history.
+   */
   .get(
     "/groups/:groupId",
     zValidator("query", z.object({ season: z.union([z.literal("all"), z.coerce.number().int()]).default("all") })),
@@ -59,7 +80,7 @@ export const groupRoutes = new Hono<AppEnv>()
       const me = await membershipOf(c.var.user.id, groupId);
       const { season } = c.req.valid("query");
 
-      const [g, members, games, results] = await Promise.all([
+      const [g, allMembers, games, results] = await Promise.all([
         db.query.group.findFirst({ where: eq(group.id, groupId) }),
         db
           .select({
@@ -70,11 +91,13 @@ export const groupRoutes = new Hono<AppEnv>()
           .where(eq(member.groupId, groupId))
           .orderBy(member.displayName),
         db.select().from(game).where(eq(game.groupId, groupId)).orderBy(desc(game.startedAt)),
-        finishedResults(groupId),
+        finishedResults(groupId, c.var.user.id),
       ]);
       if (!g) throw new HTTPException(404);
+      const members = allMembers.filter((m) => !m.leftAt);
+      const formerMembers = allMembers.filter((m) => m.leftAt);
       const standings = leaderboard(results, season === "all" ? undefined : season);
-      return c.json({ group: g, me, members, games, standings, history: historyOf(results, me.id) });
+      return c.json({ group: g, me, members, formerMembers, games, standings, history: historyOf(results, me.id) });
     },
   )
 
@@ -91,9 +114,9 @@ export const groupRoutes = new Hono<AppEnv>()
   )
 
   /**
-   * Admin removes a member. Members who played keep their results: the account becomes a guest
-   * under the same name, which can be claimed again via invite. Guests who played can't be removed,
-   * since that would drop their results. Admins can't remove themselves.
+   * Admin removes a member. Account members keep their results: they leave the group and see those
+   * games in their archive. Guests who played can't be removed, since that would drop their results.
+   * Admins can't remove themselves.
    */
   .delete(
     "/groups/:groupId/members/:memberId",
@@ -103,20 +126,31 @@ export const groupRoutes = new Hono<AppEnv>()
       const me = await adminOf(c.var.user.id, groupId);
       if (me.id === memberId) throw new HTTPException(409, { message: "Du kannst dich nicht selbst entfernen" });
 
-      const target = await db.query.member.findFirst({ where: and(eq(member.id, memberId), eq(member.groupId, groupId)) });
+      const target = await db.query.member.findFirst({
+        where: and(eq(member.id, memberId), eq(member.groupId, groupId), isNull(member.leftAt)),
+      });
       if (!target) throw new HTTPException(404, { message: "Mitglied nicht gefunden" });
 
-      const [played] = await db.select({ id: seat.id }).from(seat).where(eq(seat.memberId, memberId)).limit(1);
-      if (!played) {
-        await db.delete(member).where(eq(member.id, memberId));
-      } else if (!target.userId) {
-        throw new HTTPException(409, { message: "Gast hat schon gespielt" });
+      if (target.userId) {
+        await db.transaction((tx) => leaveGroup(tx, target));
       } else {
-        await db.update(member).set({ userId: null, role: "member" }).where(eq(member.id, memberId));
+        const [played] = await db.select({ id: seat.id }).from(seat).where(eq(seat.memberId, memberId)).limit(1);
+        if (played) throw new HTTPException(409, { message: "Gast hat schon gespielt" });
+        await db.delete(member).where(eq(member.id, memberId));
       }
       return c.json({ ok: true });
     },
   )
+
+  /** Leaves the group. Your games stay for everyone else and move to your archive. */
+  .post("/groups/:groupId/leave", async (c) => {
+    const me = await membershipOf(c.var.user.id, c.req.param("groupId"));
+    await db.transaction((tx) => leaveGroup(tx, me));
+    return c.json({ ok: true });
+  })
+
+  /** Games of groups you left that you played in, newest first. */
+  .get("/archive", async (c) => c.json(await archiveOf(c.var.user.id)))
 
   /** Invite preview: group name and guests the caller could claim as themselves. */
   .get("/invites/:code", async (c) => {
@@ -124,7 +158,7 @@ export const groupRoutes = new Hono<AppEnv>()
     const guests = await db
       .select({ id: member.id, displayName: member.displayName })
       .from(member)
-      .where(and(eq(member.groupId, g.id), isNull(member.userId)));
+      .where(and(eq(member.groupId, g.id), isNull(member.userId), isNull(member.leftAt)));
     return c.json({ group: { id: g.id, name: g.name }, guests });
   })
 
@@ -137,14 +171,18 @@ export const groupRoutes = new Hono<AppEnv>()
       const { claimMemberId } = c.req.valid("json");
       const user = c.var.user;
 
-      const existing = await db.query.member.findFirst({ where: and(eq(member.groupId, g.id), eq(member.userId, user.id)) });
-      if (existing) return c.json({ groupId: g.id });
+      // Rejoining after leaving restores the same row, so history and member id carry over.
+      const existing = await memberOf(user.id, g.id);
+      if (existing) {
+        if (existing.leftAt) await db.update(member).set({ leftAt: null }).where(eq(member.id, existing.id));
+        return c.json({ groupId: g.id });
+      }
 
       if (claimMemberId) {
         const claimed = await db
           .update(member)
           .set({ userId: user.id })
-          .where(and(eq(member.id, claimMemberId), eq(member.groupId, g.id), isNull(member.userId)))
+          .where(and(eq(member.id, claimMemberId), eq(member.groupId, g.id), isNull(member.userId), isNull(member.leftAt)))
           .returning();
         if (!claimed.length) throw new HTTPException(409, { message: "Gast wurde schon übernommen" });
       } else {
@@ -168,7 +206,7 @@ export const groupRoutes = new Hono<AppEnv>()
       const valid = await db
         .select({ id: member.id })
         .from(member)
-        .where(and(eq(member.groupId, groupId), inArray(member.id, memberIds)));
+        .where(and(eq(member.groupId, groupId), isNull(member.leftAt), inArray(member.id, memberIds)));
       if (valid.length !== new Set(memberIds).size) throw new HTTPException(400, { message: "Unbekannter Spieler" });
 
       const created = await db.transaction(async (tx) => {
