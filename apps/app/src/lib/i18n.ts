@@ -342,7 +342,7 @@ const en: Dict = {
   group: {
     title: "New group",
     name: "Name",
-    namePlaceholder: "Freitagsrunde",
+    namePlaceholder: "Friday poker",
     defaultBuyIn: "Default buy-in in €",
     create: "Create group",
   },

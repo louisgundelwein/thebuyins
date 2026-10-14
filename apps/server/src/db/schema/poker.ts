@@ -4,7 +4,7 @@ import { user } from "./auth";
 export const memberRole = pgEnum("member_role", ["admin", "member"]);
 export const gameStatus = pgEnum("game_status", ["live", "finished"]);
 
-/** A circle of friends that plays together, e.g. "Freitagsrunde". */
+/** A circle of friends that plays together, e.g. "Friday poker". */
 export const group = pgTable("group", {
   id: uuid().primaryKey().defaultRandom(),
   name: text().notNull(),

@@ -47,4 +47,4 @@ GOOD TO KNOW
 - You can delete your account at any time in the app.
 - Dark design, built for use at the table.
 
-The Buy-Ins is intended for adults, 18 and older. It is not a casino app and not a game. There is nothing to win or lose inside the app.
+The Buy-Ins is not a casino app and not a game. There is nothing to win or lose inside the app.

@@ -47,4 +47,4 @@ GUT ZU WISSEN
 - Deinen Account kannst du jederzeit in der App löschen.
 - Dunkles Design, gemacht für den Einsatz am Tisch.
 
-The Buy-Ins richtet sich an Erwachsene ab 18 Jahren. Die App ist weder eine Casino-App noch ein Spiel. In der App kann man nichts gewinnen oder verlieren.
+The Buy-Ins ist weder eine Casino-App noch ein Spiel. In der App kann man nichts gewinnen oder verlieren.

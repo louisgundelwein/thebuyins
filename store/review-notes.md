@@ -9,7 +9,22 @@ The Buy-Ins is a ledger and scorekeeper for private home poker games among frien
 - Nothing can be won or lost inside the app. Amounts are plain numbers typed in by users, like entries in a notebook.
 - The "who pays whom" screen is a calculation only. Players settle among themselves outside the app.
 - The app does not connect users with games, operators or strangers. Groups are private and join-by-invite (link or six-character code).
-- Category: Utilities. Intended audience: adults, 18+.
+- Category: Utilities.
+
+## Guideline 4.3: what makes the app different
+The Buy-Ins is built for a regular group of friends over many game nights, not for a single evening:
+- Private groups shared by all members. During a live game every phone at the table stays in sync, so everyone sees the same pot and rebuys.
+- The host can add friends without an account as guests. When they sign up later, they take over their history.
+- Random seat draw for the table.
+- Settle-up with as few payments as possible. If the chip count does not match the pot, the difference can be spread fairly across the cash-outs.
+- History, leaderboard and a balance chart across all game nights of a group.
+
+The app is built from scratch by us, with its own design. No template and no app generation service. The source code is public: https://github.com/louisgundelwein/thebuyins (full commit history).
+
+## Accounts and group content
+- An account is required because games are shared: several phones edit the same game, invites need an identity, and guests take over their history after sign-up.
+- Other users only see display names, group names and game titles inside a private, invite-only group. No public content, no chat, no way to find strangers.
+- Group admins can remove members, anyone can leave a group. Concerns can be reported via https://thebuyins.com/support or lmgzero@proton.me.
 
 ## Demo account
 - Email: `<DEMO_EMAIL>`
@@ -28,7 +43,7 @@ The demo user is a member of the group "Freitagsrunde" with four guests, three f
 The app UI is available in English and German. It follows the device language and can be switched in the profile menu (avatar top right, "Language"). Amounts are in euros.
 
 ## Other features
-- Members screen (group switcher, top left, "Members"): see members, leave the group. Group admins can remove members.
+- Members screen: group switcher, top left, "Members".
 - "Remove from my history" on a finished game hides it only for the current user; other players keep it.
 - Games of groups you left are in the profile menu under "Archive".
 
@@ -38,4 +53,3 @@ Account deletion is in the app: tap the avatar at the top right, then "Account",
 ## Other
 - Sign-in is email and password only. No third-party login.
 - No ads, no third-party analytics, no tracking.
-- Contact: `lmgzero@proton.me`

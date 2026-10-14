@@ -34,7 +34,7 @@ Does the app collect data? Yes.
 ## Rating
 
 ### Apple age rating
-- Suggested: 17+ (safe choice given the poker theme). Answer Simulated Gambling: None, since the app has no gambling mechanics.
+- Chosen: 4+. Gambling and Simulated Gambling: None, since the app has no gambling mechanics.
 - Real-money gambling / contests: None.
 - Unrestricted web access: No. User-generated content: only names and group names visible to invited members.
 - Category: Utilities (fallback Lifestyle).
@@ -46,6 +46,3 @@ Does the app collect data? Yes.
 - Shares location: No. Digital purchases: No.
 - Target audience: 18+ only. Not designed for children. Not in Families program.
 - Declarations: Contains ads: No. Is a gambling app (Play gambling declaration): No, because it offers no gambling and does not facilitate real-money play.
-
-## Open point before submission
-The current app code has only "Ausloggen", "Neue Gruppe" and invite entries in the profile menu. A delete account action and the `<origin>/support` and `<origin>/privacy` pages must exist before submitting. Both stores require in-app deletion for apps with account creation.
