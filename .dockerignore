@@ -6,3 +6,7 @@ apps/app/android
 apps/app/ios
 mocks
 .git
+# Just enough of .git to know the deployed commit (see Dockerfile).
+!.git/HEAD
+!.git/refs
+!.git/packed-refs

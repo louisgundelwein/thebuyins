@@ -4,6 +4,7 @@ import { DarkTheme, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { authClient } from "@/lib/auth";
 import { LanguageProvider } from "@/lib/language";
+import { useForceUpdate } from "@/lib/update";
 import { c, stackHeader } from "@/lib/theme";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ export default function RootLayout() {
 
   return (
     <LanguageProvider>
+      <ForceUpdate />
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={theme}>
           <StatusBar style="light" />
@@ -40,4 +42,10 @@ export default function RootLayout() {
       </QueryClientProvider>
     </LanguageProvider>
   );
+}
+
+// Lives inside LanguageProvider because the alert needs translated strings.
+function ForceUpdate() {
+  useForceUpdate();
+  return null;
 }

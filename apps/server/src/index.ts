@@ -2,9 +2,12 @@ import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { Hono } from "hono";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { app } from "./app";
 import { db } from "./db";
+
+// The Dockerfile bakes the deployed commit into /repo/COMMIT; GET /api/version reports it.
+if (existsSync("/repo/COMMIT")) process.env.COMMIT = readFileSync("/repo/COMMIT", "utf8").trim();
 
 // Production applies pending migrations on boot; local dev uses `pnpm db:push`.
 if (process.env.NODE_ENV === "production") {
