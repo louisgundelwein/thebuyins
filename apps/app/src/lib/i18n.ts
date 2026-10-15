@@ -21,6 +21,11 @@ const de = {
     names: (list: readonly string[]) =>
       list.length > 1 ? `${list.slice(0, -1).join(", ")} und ${list.at(-1)}` : (list[0] ?? ""),
   },
+  update: {
+    title: "Update erforderlich",
+    text: "Diese Version wird nicht mehr unterstützt. Bitte aktualisiere die App, um weiterzuspielen.",
+    action: "Aktualisieren",
+  },
   invite: {
     message: (group: string, url: string) => `Komm in unsere Pokerrunde "${group}": ${url}`,
   },
@@ -222,6 +227,11 @@ const en: Dict = {
     failed: "Something went wrong",
     names: (list: readonly string[]) =>
       list.length > 1 ? `${list.slice(0, -1).join(", ")} and ${list.at(-1)}` : (list[0] ?? ""),
+  },
+  update: {
+    title: "Update required",
+    text: "This version is no longer supported. Please update the app to keep playing.",
+    action: "Update",
   },
   invite: {
     message: (group: string, url: string) => `Join our poker night "${group}": ${url}`,
