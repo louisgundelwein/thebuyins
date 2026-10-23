@@ -95,13 +95,10 @@ phase_done "pod install"
 AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER")
 
 # Unsigned archive: export signs it with cloud-managed distribution, so the VM needs no signing key in its keychain.
-# The team is passed in because an unsigned archive would otherwise record no team, and export refuses it.
 phase "archive"
-TEAM_ID="$(cd "$APP_DIR" && node -p 'require("./app.json").expo.ios.appleTeamId')"
-[[ "$TEAM_ID" =~ ^[A-Z0-9]{10}$ ]] || fail "no ios.appleTeamId in app.json, got '$TEAM_ID'"
 rm -rf "$OUT/TheBuyIns.xcarchive"
 xcodebuild archive -workspace "$APP_DIR/ios/TheBuyIns.xcworkspace" -scheme TheBuyIns -configuration Release \
-  -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" CODE_SIGNING_ALLOWED=YES CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- "DEVELOPMENT_TEAM=$TEAM_ID" "${AUTH[@]}" \
+  -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" CODE_SIGNING_ALLOWED=NO "${AUTH[@]}" \
   >"$OUT/archive.log" 2>&1 || { tail -n 80 "$OUT/archive.log" >&2; fail "archive failed, full log: $OUT/archive.log"; }
 archived_app=("$ARCHIVE"/Products/Applications/*.app)
 [[ ${#archived_app[@]} -eq 1 ]] || fail "expected one .app in the archive, found ${#archived_app[@]}"
@@ -110,6 +107,9 @@ archived_build="$(plutil -extract CFBundleVersion raw "${archived_app[0]}/Info.p
 phase_done "archive"
 
 phase "export"
+# The archive is unsigned and records no team, so the team comes from app.json here.
+TEAM_ID="$(cd "$APP_DIR" && node -p 'require("./app.json").expo.ios.appleTeamId')"
+[[ "$TEAM_ID" =~ ^[A-Z0-9]{10}$ ]] || fail "no ios.appleTeamId in app.json, got '$TEAM_ID'"
 cat > "$OUT/ExportOptions.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -117,6 +117,7 @@ cat > "$OUT/ExportOptions.plist" <<PLIST
   <key>method</key><string>app-store-connect</string>
   <key>signingStyle</key><string>automatic</string>
   <key>destination</key><string>export</string>
+  <key>teamID</key><string>$TEAM_ID</string>
 </dict></plist>
 PLIST
 rm -rf "$EXPORT"
