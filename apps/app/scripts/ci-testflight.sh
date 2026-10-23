@@ -80,6 +80,13 @@ phase "expo prebuild"
 (cd "$APP_DIR" && CI=1 npx expo prebuild --clean -p ios --no-install)
 phase_done "expo prebuild"
 
+# Expo writes CFBundleVersion as a literal from app.json, so it is set here, not through a build setting.
+phase "build number"
+INFO_PLIST="$APP_DIR/ios/TheBuyIns/Info.plist"
+plutil -replace CFBundleVersion -string "$BUILD_NUMBER" "$INFO_PLIST"
+[[ "$(plutil -extract CFBundleVersion raw "$INFO_PLIST")" == "$BUILD_NUMBER" ]] || fail "could not set CFBundleVersion in $INFO_PLIST"
+phase_done "build number"
+
 phase "pod install"
 (cd "$APP_DIR/ios" && pod install)
 phase_done "pod install"
@@ -87,10 +94,11 @@ phase_done "pod install"
 
 AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER")
 
+# Unsigned archive: export signs it with cloud-managed distribution, so the VM needs no signing key in its keychain.
 phase "archive"
 rm -rf "$OUT/TheBuyIns.xcarchive"
 xcodebuild archive -workspace "$APP_DIR/ios/TheBuyIns.xcworkspace" -scheme TheBuyIns -configuration Release \
-  -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" "CURRENT_PROJECT_VERSION=$BUILD_NUMBER" CODE_SIGNING_ALLOWED=NO "${AUTH[@]}" \
+  -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" CODE_SIGNING_ALLOWED=NO "${AUTH[@]}" \
   >"$OUT/archive.log" 2>&1 || { tail -n 80 "$OUT/archive.log" >&2; fail "archive failed, full log: $OUT/archive.log"; }
 archived_app=("$ARCHIVE"/Products/Applications/*.app)
 [[ ${#archived_app[@]} -eq 1 ]] || fail "expected one .app in the archive, found ${#archived_app[@]}"
