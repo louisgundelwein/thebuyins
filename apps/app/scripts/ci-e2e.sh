@@ -84,11 +84,13 @@ runtime="$(xcrun simctl list runtimes available | grep -E '^iOS ' | grep -E 'Sim
 device_type="$(xcrun simctl list devicetypes | grep -E '^iPhone 17 \(' | head -n 1 | sed -E 's/.*\((com\.apple[^)]+)\).*/\1/')"
 [[ -n "$runtime" && -n "$device_type" ]] || { echo "no iOS runtime or iPhone 17 device type found" >&2; exit 1; }
 UDID="$(xcrun simctl create ci-e2e "$device_type" "$runtime")"
+echo "simulator: $UDID"
 xcrun simctl bootstatus "$UDID" -b
 xcrun simctl install "$UDID" "$APP"
 phase_done "simulator"
 
 phase "launch"
+codesign -d --entitlements - "$APP" 2>&1 | head -5
 pid="$(xcrun simctl launch "$UDID" "$BUNDLE_ID" | sed -E 's/.*: ([0-9]+)$/\1/')"
 [[ "$pid" =~ ^[0-9]+$ ]] || { echo "launch did not return a pid" >&2; exit 1; }
 sleep 20
