@@ -90,7 +90,7 @@ AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKey
 phase "archive"
 rm -rf "$OUT/TheBuyIns.xcarchive"
 xcodebuild archive -workspace "$APP_DIR/ios/TheBuyIns.xcworkspace" -scheme TheBuyIns -configuration Release \
-  -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" "CURRENT_PROJECT_VERSION=$BUILD_NUMBER" CODE_SIGN_STYLE=Automatic "${AUTH[@]}" \
+  -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" "CURRENT_PROJECT_VERSION=$BUILD_NUMBER" CODE_SIGNING_ALLOWED=NO "${AUTH[@]}" \
   >"$OUT/archive.log" 2>&1 || { tail -n 80 "$OUT/archive.log" >&2; fail "archive failed, full log: $OUT/archive.log"; }
 archived_app=("$ARCHIVE"/Products/Applications/*.app)
 [[ ${#archived_app[@]} -eq 1 ]] || fail "expected one .app in the archive, found ${#archived_app[@]}"
