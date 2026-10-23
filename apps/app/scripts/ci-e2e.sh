@@ -14,7 +14,7 @@ BUNDLE_ID=com.thebuyins.app
 
 [[ -f "$APP_DIR/app.json" ]] || { echo "run from the repo root: $APP_DIR/app.json not found" >&2; exit 1; }
 
-phase() { echo "== $1 ($(date +%H:%M:%S))"; SECONDS=0; }
+phase() { echo "::phase:: $1"; echo "== $1 ($(date +%H:%M:%S))"; SECONDS=0; }
 phase_done() { echo "== $1 done in ${SECONDS}s"; }
 
 phase "toolchain"

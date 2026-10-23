@@ -13,7 +13,7 @@ KEY_DIR="$HOME/.appstoreconnect/private_keys"
 KEY="$KEY_DIR/AuthKey_${ASC_KEY_ID:-missing}.p8"
 
 
-phase() { echo "== $1 ($(date +%H:%M:%S))"; SECONDS=0; }
+phase() { echo "::phase:: $1"; echo "== $1 ($(date +%H:%M:%S))"; SECONDS=0; }
 phase_done() { echo "== $1 done in ${SECONDS}s"; }
 fail() { echo "$*" >&2; exit 1; }
 
