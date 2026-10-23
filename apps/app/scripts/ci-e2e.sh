@@ -79,7 +79,8 @@ APP="${apps[0]}"
 phase_done "xcodebuild Release"
 
 phase "simulator"
-runtime="$(xcrun simctl list runtimes available | grep -E '^iOS ' | tail -n 1 | sed -E 's/.*- (com\.apple\.CoreSimulator\.SimRuntime\.[^ ]+).*/\1/')"
+# The plain iOS runtime only: variant runtimes (e.g. "-iPhone19-4") reject the stock device types.
+runtime="$(xcrun simctl list runtimes available | grep -E '^iOS ' | grep -E 'SimRuntime\.iOS-[0-9-]+$' | tail -n 1 | sed -E 's/.*- (com\.apple\.CoreSimulator\.SimRuntime\.[^ ]+)$/\1/')"
 device_type="$(xcrun simctl list devicetypes | grep -E '^iPhone 17 \(' | head -n 1 | sed -E 's/.*\((com\.apple[^)]+)\).*/\1/')"
 [[ -n "$runtime" && -n "$device_type" ]] || { echo "no iOS runtime or iPhone 17 device type found" >&2; exit 1; }
 UDID="$(xcrun simctl create ci-e2e "$device_type" "$runtime")"
