@@ -6,19 +6,12 @@ set -euo pipefail
 
 ROOT="$(pwd)"
 APP_DIR="$ROOT/apps/app"
-TOOLS="$HOME/ci-tools"
 OUT="$HOME/ci-testflight"
 ARCHIVE="$OUT/TheBuyIns.xcarchive"
 EXPORT="$OUT/export"
-NODE_VERSION=24.22.1
-POD_VERSION=1.17.0
-RUBY_DIGEST=43ff285a82f48c84a06d0676a3800815a19d290d32e44182ddd7a6e95478e18e
 KEY_DIR="$HOME/.appstoreconnect/private_keys"
 KEY="$KEY_DIR/AuthKey_${ASC_KEY_ID:-missing}.p8"
 
-export PATH="$TOOLS/node/bin:$TOOLS/ruby/bin:$TOOLS/gems/bin:$TOOLS/bin:$PATH"
-export GEM_HOME="$TOOLS/gems"
-export LANG=en_US.UTF-8
 
 phase() { echo "== $1 ($(date +%H:%M:%S))"; SECONDS=0; }
 phase_done() { echo "== $1 done in ${SECONDS}s"; }
@@ -43,33 +36,10 @@ openssl pkey -in "$KEY" -noout || fail "ASC_PRIVATE_KEY is not a valid PEM key"
 phase_done "api key"
 
 phase "toolchain"
-rm -rf "$TOOLS" "$OUT"
-mkdir -p "$TOOLS" "$OUT"
-
-# Official Node tarball, checked against the published SHA-256 list.
-node_pkg="node-v$NODE_VERSION-darwin-arm64.tar.gz"
-curl -fsSL "https://nodejs.org/dist/v$NODE_VERSION/$node_pkg" -o "$TOOLS/$node_pkg"
-curl -fsSL "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt" -o "$TOOLS/SHASUMS256.txt"
-(cd "$TOOLS" && grep " $node_pkg\$" SHASUMS256.txt | shasum -a 256 -c -)
-mkdir -p "$TOOLS/node"
-tar -xzf "$TOOLS/$node_pkg" -C "$TOOLS/node" --strip-components 1
-
-# Portable Ruby from Homebrew's bottle registry (the guest's system Ruby is too old for CocoaPods).
-ghcr_token="$(curl -fsSL "https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/portable-ruby:pull" | sed -E 's/.*"token":"([^"]+)".*/\1/')"
-curl -fsSL -H "Authorization: Bearer $ghcr_token" \
-  "https://ghcr.io/v2/homebrew/core/portable-ruby/blobs/sha256:$RUBY_DIGEST" -o "$TOOLS/portable-ruby.tar.gz"
-echo "$RUBY_DIGEST  $TOOLS/portable-ruby.tar.gz" | shasum -a 256 -c -
-mkdir -p "$TOOLS/ruby-unpacked"
-tar -xzf "$TOOLS/portable-ruby.tar.gz" -C "$TOOLS/ruby-unpacked"
-ruby_bin="$(find "$TOOLS/ruby-unpacked" -path '*/bin/ruby' -type f | head -n 1)"
-[[ -x "$ruby_bin" ]] || fail "no ruby binary in the portable-ruby bottle"
-mv "$(dirname "$(dirname "$ruby_bin")")" "$TOOLS/ruby"
-
-npm install -g --prefix "$TOOLS" pnpm@11.17.0 >/dev/null
-gem install cocoapods -v "$POD_VERSION" --no-document --install-dir "$GEM_HOME" >/dev/null
-node --version
-pnpm --version
-pod --version
+rm -rf "$OUT"
+mkdir -p "$OUT"
+# shellcheck source=apps/app/scripts/ci-tools.sh
+source "$APP_DIR/scripts/ci-tools.sh"
 phase_done "toolchain"
 
 phase "pnpm install"
@@ -77,8 +47,8 @@ pnpm install --frozen-lockfile
 phase_done "pnpm install"
 
 phase "expo prebuild"
-(cd "$APP_DIR" && CI=1 npx expo prebuild --clean -p ios --no-install)
-phase_done "expo prebuild"
+(cd "$APP_DIR" && CI=1 npx expo prebuild --clean -p ios)
+phase_done "expo prebuild (with pod install)"
 
 # Expo writes CFBundleVersion as a literal from app.json, so it is set here, not through a build setting.
 phase "build number"
@@ -86,10 +56,6 @@ INFO_PLIST="$APP_DIR/ios/TheBuyIns/Info.plist"
 plutil -replace CFBundleVersion -string "$BUILD_NUMBER" "$INFO_PLIST"
 [[ "$(plutil -extract CFBundleVersion raw "$INFO_PLIST")" == "$BUILD_NUMBER" ]] || fail "could not set CFBundleVersion in $INFO_PLIST"
 phase_done "build number"
-
-phase "pod install"
-(cd "$APP_DIR/ios" && pod install)
-phase_done "pod install"
 
 
 AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER")
