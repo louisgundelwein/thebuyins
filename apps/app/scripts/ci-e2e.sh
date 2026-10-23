@@ -44,6 +44,7 @@ xcodebuild -workspace "$APP_DIR/ios/TheBuyIns.xcworkspace" -scheme TheBuyIns -co
   -destination 'generic/platform=iOS Simulator' -derivedDataPath "$DERIVED" \
   CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES build >"$OUT/xcodebuild.log" 2>&1 \
   || { tail -n 80 "$OUT/xcodebuild.log" >&2; echo "xcodebuild failed, full log: $OUT/xcodebuild.log" >&2; exit 1; }
+print_warnings "$OUT/xcodebuild.log"
 apps=("$DERIVED"/Build/Products/Release-iphonesimulator/*.app)
 [[ ${#apps[@]} -eq 1 && -d "${apps[0]}" ]] || { echo "expected one .app in Release-iphonesimulator, found ${#apps[@]}" >&2; exit 1; }
 APP="${apps[0]}"

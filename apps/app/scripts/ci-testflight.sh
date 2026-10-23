@@ -71,6 +71,7 @@ rm -rf "$OUT/TheBuyIns.xcarchive"
 xcodebuild archive -workspace "$APP_DIR/ios/TheBuyIns.xcworkspace" -scheme TheBuyIns -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" CODE_SIGNING_ALLOWED=NO "${AUTH[@]}" \
   >"$OUT/archive.log" 2>&1 || { tail -n 80 "$OUT/archive.log" >&2; fail "archive failed, full log: $OUT/archive.log"; }
+print_warnings "$OUT/archive.log"
 archived_app=("$ARCHIVE"/Products/Applications/*.app)
 [[ ${#archived_app[@]} -eq 1 ]] || fail "expected one .app in the archive, found ${#archived_app[@]}"
 archived_build="$(plutil -extract CFBundleVersion raw "${archived_app[0]}/Info.plist")"
@@ -95,6 +96,7 @@ rm -rf "$EXPORT"
 xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$EXPORT" \
   -exportOptionsPlist "$OUT/ExportOptions.plist" "${AUTH[@]}" >"$OUT/export.log" 2>&1 \
   || { tail -n 80 "$OUT/export.log" >&2; fail "export failed, full log: $OUT/export.log"; }
+print_warnings "$OUT/export.log"
 ipas=("$EXPORT"/*.ipa)
 [[ ${#ipas[@]} -eq 1 && -f "${ipas[0]}" ]] || fail "expected one .ipa in $EXPORT, found ${#ipas[@]}"
 ipa_build="$(unzip -p "${ipas[0]}" 'Payload/*.app/Info.plist' | plutil -extract CFBundleVersion raw -)"

@@ -12,3 +12,9 @@ require_tool node -v v24.22.1
 require_tool pnpm -v 11.17.0
 require_tool ruby -v "ruby 4.0.9"
 require_tool pod --version 1.17.0
+
+# xcodebuild output goes to a file to keep the job log short; this prints its warnings (once each) so MINIONS counts them.
+# grep exits 1 when there are none, which is fine; anything else is a real error.
+print_warnings() {
+  grep -E ': warning: |^warning: |^ld: warning: ' "$1" | sort -u || [[ $? -eq 1 ]]
+}
