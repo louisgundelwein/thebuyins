@@ -1,0 +1,37 @@
+# iOS jobs run on our Mac minis through MINION; this workflow only submits them and reports the result.
+name: MINION
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  MINION_URL: ${{ vars.MINION_URL }}
+  MINION_API_KEY: ${{ secrets.MINION_API_KEY }}
+
+jobs:
+  e2e:
+    name: iOS E2E (simulator)
+    # Fork PRs never reach the minis.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    concurrency:
+      group: e2e-${{ github.head_ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+      - run: .github/scripts/minion-run.sh "$GITHUB_HEAD_REF" "bash apps/app/scripts/ci-e2e.sh"
+
+  testflight:
+    name: TestFlight
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    concurrency:
+      group: testflight
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - run: .github/scripts/minion-run.sh main "BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 100)) bash apps/app/scripts/ci-testflight.sh"
