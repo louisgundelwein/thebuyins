@@ -29,8 +29,13 @@ pnpm install --frozen-lockfile
 phase_done "pnpm install"
 
 phase "expo prebuild"
-(cd "$APP_DIR" && CI=1 npx expo prebuild --clean -p ios)
-phase_done "expo prebuild (with pod install)"
+(cd "$APP_DIR" && CI=1 npx expo prebuild --clean -p ios --no-install)
+phase_done "expo prebuild"
+
+# Separate from prebuild: prebuild reports success even when its own pod install fails.
+phase "pod install"
+(cd "$APP_DIR/ios" && pod install)
+phase_done "pod install"
 
 phase "xcodebuild Release"
 # Ad-hoc signing (what Xcode does for simulator builds). CODE_SIGNING_ALLOWED=NO leaves the app without

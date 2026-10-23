@@ -2,7 +2,7 @@
 # Sourced by the CI scripts. The MINIONS VM image (xcode-27-2-tools) ships these exact versions; anything else fails.
 # Downloads are cached per repo on the build machine through npm_config_store_dir and CP_HOME_DIR when MINIONS sets them.
 export LANG=en_US.UTF-8
-# Expo is the supported way to install pods for this app; React Native's notice targets plain `pod install` users.
+# React Native's notice that plain `pod install` is deprecated; CI runs it on purpose (see the pod install phase).
 export RCT_IGNORE_PODS_DEPRECATION=1
 
 require_tool() {
