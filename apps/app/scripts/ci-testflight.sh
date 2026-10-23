@@ -33,6 +33,15 @@ esac
 [[ "${BUILD_NUMBER:-}" =~ ^[0-9]+$ ]] || fail "BUILD_NUMBER must be an integer, got '${BUILD_NUMBER:-}'"
 : "${ASC_KEY_ID:?missing ASC_KEY_ID}" "${ASC_ISSUER:?missing ASC_ISSUER}" "${ASC_PRIVATE_KEY:?missing ASC_PRIVATE_KEY}"
 
+phase "api key"
+# Written without echoing it. openssl rejects a key whose newlines were mangled by the CI system.
+mkdir -p "$KEY_DIR"
+chmod 700 "$HOME/.appstoreconnect" "$KEY_DIR"
+(umask 077 && printf '%s\n' "$ASC_PRIVATE_KEY" > "$KEY")
+chmod 600 "$KEY"
+openssl pkey -in "$KEY" -noout || fail "ASC_PRIVATE_KEY is not a valid PEM key"
+phase_done "api key"
+
 phase "toolchain"
 rm -rf "$TOOLS" "$OUT"
 mkdir -p "$TOOLS" "$OUT"
@@ -75,14 +84,6 @@ phase "pod install"
 (cd "$APP_DIR/ios" && pod install)
 phase_done "pod install"
 
-phase "api key"
-# Written without echoing it. openssl rejects a key whose newlines were mangled by the CI system.
-mkdir -p "$KEY_DIR"
-chmod 700 "$HOME/.appstoreconnect" "$KEY_DIR"
-(umask 077 && printf '%s\n' "$ASC_PRIVATE_KEY" > "$KEY")
-chmod 600 "$KEY"
-openssl pkey -in "$KEY" -noout || fail "ASC_PRIVATE_KEY is not a valid PEM key"
-phase_done "api key"
 
 AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER")
 
