@@ -39,7 +39,8 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
-      # Unique per run and re-run, and above every build uploaded by hand.
-      - run: .github/scripts/minion-run.sh main "$GITHUB_SHA" "BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER * 10 + GITHUB_RUN_ATTEMPT)) bash apps/app/scripts/ci-testflight.sh"
+      # Minutes since 1970: grows with every run and re-run, and is far above the builds uploaded by hand.
+      # A push that lands while another upload waits replaces it; the newest main is what reaches TestFlight.
+      - run: .github/scripts/minion-run.sh main "$GITHUB_SHA" "BUILD_NUMBER=$(( $(date +%s) / 60 )) bash apps/app/scripts/ci-testflight.sh"
         env:
           MINION_API_KEY: ${{ secrets.MINION_DEPLOY_KEY }}
