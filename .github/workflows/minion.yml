@@ -8,7 +8,6 @@ on:
 
 env:
   MINION_URL: ${{ vars.MINION_URL }}
-  MINION_API_KEY: ${{ secrets.MINION_API_KEY }}
 
 jobs:
   e2e:
@@ -22,16 +21,25 @@ jobs:
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v5
-      - run: .github/scripts/minion-run.sh "$GITHUB_HEAD_REF" "bash apps/app/scripts/ci-e2e.sh"
+      # This key cannot unlock repository secrets in MINION.
+      - run: .github/scripts/minion-run.sh "$GITHUB_HEAD_REF" "$HEAD_SHA" "bash apps/app/scripts/ci-e2e.sh"
+        env:
+          MINION_API_KEY: ${{ secrets.MINION_API_KEY }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
   testflight:
     name: TestFlight
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 100
+    # Only main can read this environment's key, which is the one allowed to use the App Store Connect secrets.
+    environment: testflight
     concurrency:
       group: testflight
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
-      - run: .github/scripts/minion-run.sh main "BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 100)) bash apps/app/scripts/ci-testflight.sh"
+      # Unique per run and re-run, and above every build uploaded by hand.
+      - run: .github/scripts/minion-run.sh main "$GITHUB_SHA" "BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER * 10 + GITHUB_RUN_ATTEMPT)) bash apps/app/scripts/ci-testflight.sh"
+        env:
+          MINION_API_KEY: ${{ secrets.MINION_DEPLOY_KEY }}
