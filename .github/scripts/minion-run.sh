@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs one MINION job for this repo, mirrors its logs and exits 0 only if the job succeeded.
+# Runs one MINION job for this repo, mirrors its logs, exits 0 only if the job succeeded.
 # Usage: minion-run.sh <branch> <sha> <step>. The job fails unless it checks out exactly <sha>.
 # Needs MINION_URL, MINION_API_KEY and the GITHUB_* env of an Actions run.
 set -euo pipefail
@@ -10,44 +10,63 @@ STEP="$3"
 API="$MINION_URL/api/v1"
 # The same key on a re-POST returns the job that the first POST created, so a lost response cannot start a second job.
 KEY="$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$GITHUB_JOB"
+BODY=$(jq -n --arg repo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" --arg ref "$BRANCH" \
+  --arg step "test \"\$(git rev-parse HEAD)\" = \"$SHA\" || { echo \"branch moved past $SHA\" >&2; exit 1; }; $STEP" \
+  --arg key "$KEY" \
+  '{repo: $repo, ref: $ref, steps: [$step], idempotencyKey: $key, timeoutSeconds: 5400}')
 JOB=""
+SUBMITTED=0
 DONE=0
 
-# One HTTP call. Each attempt writes its own file; only a complete body from a successful attempt is printed,
-# so a dropped connection can never leave a partial body to parse. Attempts are capped at 120 s in total.
-api() {
-  local start=$SECONDS out
+# One HTTP call that may use at most $1 seconds in total, with connect timeout $2. Every attempt and every sleep is
+# capped to what is left of the budget, and no attempt starts once it is spent. Each attempt writes its own file, so
+# only a complete body from a successful attempt is printed.
+api_within() {
+  local budget=$1 connect=$2 start=$SECONDS left attempt out
+  shift 2
   while true; do
+    left=$(( budget - (SECONDS - start) ))
+    (( left > 0 )) || return 1
+    attempt=$(( left < 30 ? left : 30 ))
     out="$(mktemp)"
-    if curl -fsS --connect-timeout 10 --max-time 30 -o "$out" \
+    if curl -fsS --connect-timeout "$(( connect < attempt ? connect : attempt ))" --max-time "$attempt" -o "$out" \
          -H @<(printf 'Authorization: Bearer %s\n' "$MINION_API_KEY") "$@"; then
       cat "$out"
       rm -f "$out"
       return 0
     fi
     rm -f "$out"
-    if (( SECONDS - start >= 120 )); then
-      return 1
-    fi
-    sleep 3
+    left=$(( budget - (SECONDS - start) ))
+    (( left > 0 )) || return 1
+    sleep "$(( left < 3 ? left : 3 ))"
   done
 }
 
-# Registered before the submit, so a job that exists is cancelled on any abnormal exit. The cancel itself is bounded.
+# Normal calls: 120 s of attempts in total.
+api() { api_within 120 10 "$@"; }
+
+# Registered before the submit. Cancels the job when the script exits early. If the submit was sent but its ID never
+# arrived, one bounded re-POST with the same key returns that job, then it is cancelled.
 cancel() {
-  [ "$DONE" = 0 ] && [ -n "$JOB" ] || return 0
+  [ "$DONE" = 0 ] && [ "$SUBMITTED" = 1 ] || return 0
+  if [ -z "$JOB" ]; then
+    echo "recovering the MINION job for key $KEY" >&2
+    JOB="$(api_within 15 5 -H content-type:application/json -d "$BODY" "$API/jobs" 2>/dev/null \
+      | jq -er '.job.id' 2>/dev/null || true)"
+    if [ -z "$JOB" ]; then
+      echo "WARNING: could not find the MINION job for idempotency key $KEY; cancel it in MINION by hand" >&2
+      return 0
+    fi
+  fi
   echo "cancelling MINION job $JOB" >&2
-  curl -fsS --connect-timeout 5 --max-time 20 -o /dev/null -X POST \
-    -H @<(printf 'Authorization: Bearer %s\n' "$MINION_API_KEY") "$API/jobs/$JOB/cancel" \
-    || echo "cancel of $JOB failed; cancel it in MINION" >&2
+  api_within 20 5 -X POST "$API/jobs/$JOB/cancel" >/dev/null 2>&1 \
+    || echo "WARNING: cancel of MINION job $JOB failed; cancel it in MINION (key $KEY)" >&2
 }
 trap cancel EXIT
 trap 'exit 130' INT TERM
 
-BODY=$(jq -n --arg repo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" --arg ref "$BRANCH" \
-  --arg step "test \"\$(git rev-parse HEAD)\" = \"$SHA\" || { echo \"branch moved past $SHA\" >&2; exit 1; }; $STEP" \
-  --arg key "$KEY" \
-  '{repo: $repo, ref: $ref, steps: [$step], idempotencyKey: $key, timeoutSeconds: 5400}')
+# Retries the submit with the same key. The first attempt is the one that can leave a job behind.
+SUBMITTED=1
 for _ in 1 2 3; do
   RESPONSE="$(api -H content-type:application/json -d "$BODY" "$API/jobs" || true)"
   JOB="$(jq -er '.job.id' <<<"$RESPONSE" 2>/dev/null || true)"
