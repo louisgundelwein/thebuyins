@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Check for every branch, no secrets: typecheck and tests from the repo, then a Release build for the iOS simulator.
-# Nothing is signed, installed or run. Runs from the repo root on a fresh MINIONS VM. Output goes to ~/ci-check.
+# Uses no signing identity or secrets, and nothing is installed or run. Runs from the repo root on a fresh MINIONS VM. Output goes to ~/ci-check.
 # Any failure exits non-zero.
 set -euo pipefail
 
