@@ -1,0 +1,10 @@
+pipelines:
+  check:
+    run: bash scripts/minions/check.sh
+  e2e:
+    run: bash scripts/minions/e2e.sh
+    shards: 1
+  testflight:
+    run: bash scripts/minions/testflight.sh
+    secrets: true
+    branches: [main]

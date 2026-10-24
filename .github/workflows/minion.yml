@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       # This key cannot unlock repository secrets in MINION.
-      - run: .github/scripts/minion-run.sh "$GITHUB_HEAD_REF" "$HEAD_SHA" "bash apps/app/scripts/ci-e2e.sh"
+      - run: .github/scripts/minion-run.sh "$GITHUB_HEAD_REF" "$HEAD_SHA" "bash scripts/minions/e2e.sh"
         env:
           MINION_API_KEY: ${{ secrets.MINION_API_KEY }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -41,6 +41,6 @@ jobs:
       - uses: actions/checkout@v5
       # Minutes since 1970: grows with every run and re-run, and is far above the builds uploaded by hand.
       # A push that lands while another upload waits replaces it; the newest main is what reaches TestFlight.
-      - run: .github/scripts/minion-run.sh main "$GITHUB_SHA" "BUILD_NUMBER=$(( $(date +%s) / 60 )) bash apps/app/scripts/ci-testflight.sh"
+      - run: .github/scripts/minion-run.sh main "$GITHUB_SHA" "BUILD_NUMBER=$(( $(date +%s) / 60 )) bash scripts/minions/testflight.sh"
         env:
           MINION_API_KEY: ${{ secrets.MINION_DEPLOY_KEY }}

@@ -6,6 +6,8 @@ set -euo pipefail
 
 ROOT="$(pwd)"
 APP_DIR="$ROOT/apps/app"
+# shellcheck source=scripts/minions/lib.sh
+source "$ROOT/scripts/minions/lib.sh"
 OUT="$HOME/ci-testflight"
 ARCHIVE="$OUT/TheBuyIns.xcarchive"
 EXPORT="$OUT/export"
@@ -13,8 +15,6 @@ KEY_DIR="$HOME/.appstoreconnect/private_keys"
 KEY="$KEY_DIR/AuthKey_${ASC_KEY_ID:-missing}.p8"
 
 
-phase() { echo "::phase:: $1"; echo "== $1 ($(date +%H:%M:%S))"; SECONDS=0; }
-phase_done() { echo "== $1 done in ${SECONDS}s"; }
 fail() { echo "$*" >&2; exit 1; }
 
 case "${1:-}" in
@@ -38,8 +38,6 @@ phase_done "api key"
 phase "toolchain"
 rm -rf "$OUT"
 mkdir -p "$OUT"
-# shellcheck source=apps/app/scripts/ci-tools.sh
-source "$APP_DIR/scripts/ci-tools.sh"
 phase_done "toolchain"
 
 phase "pnpm install"

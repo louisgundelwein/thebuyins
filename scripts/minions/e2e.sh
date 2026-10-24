@@ -1,27 +1,23 @@
 #!/usr/bin/env bash
 # iOS smoke test for CI: Release build for the simulator, install, launch, check the app stays up, screenshot.
-# Runs from the repo root on a fresh MINIONS VM; the toolchain comes from the image (ci-tools.sh).
+# Runs from the repo root on a fresh MINIONS VM; the toolchain comes from the image (scripts/minions/lib.sh).
 # Output goes to ~/ci-e2e. Any failure exits non-zero.
 set -euo pipefail
 
 ROOT="$(pwd)"
 APP_DIR="$ROOT/apps/app"
+# shellcheck source=scripts/minions/lib.sh
+source "$ROOT/scripts/minions/lib.sh"
 OUT="$HOME/ci-e2e"
 DERIVED="$OUT/derived"
 SHOT="$OUT/screenshot.png"
 BUNDLE_ID=com.thebuyins.app
 
-
 [[ -f "$APP_DIR/app.json" ]] || { echo "run from the repo root: $APP_DIR/app.json not found" >&2; exit 1; }
-
-phase() { echo "::phase:: $1"; echo "== $1 ($(date +%H:%M:%S))"; SECONDS=0; }
-phase_done() { echo "== $1 done in ${SECONDS}s"; }
 
 phase "toolchain"
 rm -rf "$OUT"
 mkdir -p "$OUT"
-# shellcheck source=apps/app/scripts/ci-tools.sh
-source "$APP_DIR/scripts/ci-tools.sh"
 phase_done "toolchain"
 
 phase "pnpm install"
