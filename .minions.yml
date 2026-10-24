@@ -5,6 +5,6 @@ pipelines:
     run: bash scripts/minions/e2e.sh
     shards: 1
   testflight:
-    run: bash scripts/minions/testflight.sh
+    run: BUILD_NUMBER=$(( $(date +%s) / 60 )) bash scripts/minions/testflight.sh
     secrets: true
     branches: [main]

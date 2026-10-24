@@ -36,6 +36,7 @@ openssl pkey -in "$KEY" -noout || fail "ASC_PRIVATE_KEY is not a valid PEM key"
 phase_done "api key"
 
 phase "toolchain"
+check_toolchain
 rm -rf "$OUT"
 mkdir -p "$OUT"
 phase_done "toolchain"

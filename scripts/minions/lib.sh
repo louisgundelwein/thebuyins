@@ -8,10 +8,14 @@ require_tool() {
   actual="$("$1" "$2" 2>&1 | head -n 1)" || { echo "$1 missing from the build image" >&2; exit 1; }
   [[ "$actual" == *"$3"* ]] || { echo "$1 $3 expected in the build image, got: $actual" >&2; exit 1; }
 }
-require_tool node -v v24.22.1
-require_tool pnpm -v 11.17.0
-require_tool ruby -v "ruby 4.0.9"
-require_tool pod --version 1.17.0
+
+# Fails unless the image has the tool versions this repo was built with. Call right after phase "toolchain".
+check_toolchain() {
+  require_tool node -v v24.22.1
+  require_tool pnpm -v 11.17.0
+  require_tool ruby -v "ruby 4.0.9"
+  require_tool pod --version 1.17.0
+}
 
 # Starts and ends a timed phase. MINIONS reads the ::phase:: line as the step name.
 phase() { echo "::phase:: $1"; echo "== $1 ($(date +%H:%M:%S))"; SECONDS=0; }

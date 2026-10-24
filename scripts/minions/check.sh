@@ -14,6 +14,7 @@ DERIVED="$OUT/derived"
 source "$ROOT/scripts/minions/lib.sh"
 
 phase "toolchain"
+check_toolchain
 rm -rf "$OUT"
 mkdir -p "$OUT"
 phase_done "toolchain"

@@ -16,6 +16,7 @@ BUNDLE_ID=com.thebuyins.app
 [[ -f "$APP_DIR/app.json" ]] || { echo "run from the repo root: $APP_DIR/app.json not found" >&2; exit 1; }
 
 phase "toolchain"
+check_toolchain
 rm -rf "$OUT"
 mkdir -p "$OUT"
 phase_done "toolchain"
