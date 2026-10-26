@@ -70,9 +70,8 @@ echo "app running after 20 s (pid $pid)"
 echo "screenshot: $SHOT"
 phase_done "launch"
 
-# The first screen is the signed-out sign-in screen: its primary button is accent #a78bfa at (60, 1526) and
-# its background is #0c0b12 at (603, 2300) on the iPhone 17 screenshot (1206x2622). Vision OCR does not run on
-# the VM, so the check reads pixels. A black frame (the failure seen before) reads #000000 and fails here.
+# The first screen follows the simulator appearance. Check a matching light or dark button/background
+# pair on the iPhone 17 screenshot (1206x2622). A black frame or a mixed appearance fails.
 phase "first screen"
 PIXEL="$OUT/pixel"
 cat > "$OUT/pixel.swift" <<'SWIFT'
@@ -98,7 +97,9 @@ SWIFT
 swiftc -O "$OUT/pixel.swift" -o "$PIXEL"
 button="$("$PIXEL" "$SHOT" 60 1526)"
 background="$("$PIXEL" "$SHOT" 603 2300)"
-[[ "$button" == a78bfa && "$background" == 0c0b12 ]] \
-  || { echo "first screen not drawn: button=$button (want a78bfa), background=$background (want 0c0b12)" >&2; exit 1; }
+case "$button:$background" in
+  7043d7:fcfcfd|a78bfa:0c0b12) ;;
+  *) echo "first screen not drawn: button=$button, background=$background (expected matching light or dark colours)" >&2; exit 1 ;;
+esac
 echo "first screen drawn: sign-in button and background match"
 phase_done "first screen"

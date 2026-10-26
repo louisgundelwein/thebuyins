@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View } from "react-native";
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
 import { useLanguage } from "@/lib/language";
-import { c } from "@/lib/theme";
+import { useTheme } from "@/lib/appearance";
 
 /**
  * Stock-style area chart of a running balance. `points` are cumulative cents, one per game;
@@ -10,6 +10,7 @@ import { c } from "@/lib/theme";
  */
 export function BalanceChart({ points, height = 120 }: { points: readonly number[]; height?: number }) {
   const { t, signedMoney } = useLanguage();
+  const { c } = useTheme();
   const [width, setWidth] = useState(0);
   const values = [0, ...points];
   const min = Math.min(0, ...values);
@@ -40,7 +41,7 @@ export function BalanceChart({ points, height = 120 }: { points: readonly number
               <Stop offset="1" stopColor={color} stopOpacity={0} />
             </LinearGradient>
           </Defs>
-          <Line x1={0} x2={width} y1={y(0)} y2={y(0)} stroke="rgba(255,255,255,0.18)" strokeDasharray="3 4" />
+          <Line x1={0} x2={width} y1={y(0)} y2={y(0)} stroke={c.chartLine} strokeDasharray="3 4" />
           {values.length > 1 && (
             <>
               <Path d={area} fill="url(#fill)" />
