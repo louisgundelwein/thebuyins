@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "thebuyins",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.thebuyins.app",
       "buildNumber": "11",
@@ -79,12 +79,14 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0c0b12",
+          "backgroundColor": "#fcfcfd",
+          "dark": { "backgroundColor": "#0c0b12" },
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 120
         }
       ],
       "expo-secure-store",
+      "expo-system-ui",
       [
         "expo-localization",
         {

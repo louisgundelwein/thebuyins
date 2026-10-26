@@ -3,7 +3,7 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Avatar, T } from "@/components/ui";
 import { useLanguage } from "@/lib/language";
-import { c } from "@/lib/theme";
+import { useTheme } from "@/lib/appearance";
 
 /** Design size from the mock; the whole table scales from this to the available width. */
 const BASE_W = 300;
@@ -16,6 +16,7 @@ const SEAT_W = 70;
  */
 export function SeatingTable({ seats }: { seats: readonly { id: string; name: string; guest: boolean }[] }) {
   const { t } = useLanguage();
+  const { c } = useTheme();
   const [width, setWidth] = useState(BASE_W);
   // Side seats stick out of the box by ~14px each, so leave room for them.
   const k = Math.min(width - 28, 320) / BASE_W;
@@ -27,11 +28,11 @@ export function SeatingTable({ seats }: { seats: readonly { id: string; name: st
     <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} style={s.wrap}>
       <View style={{ width: w, height: h }}>
         <LinearGradient
-          colors={["#1a1530", "#2a1f4d", "#1a1530"]}
+          colors={[c.tableFrom, c.tableTo, c.tableFrom]}
           locations={[0, 0.5, 1]}
           accessible
           accessibilityLabel={t.seating.seats(seats.length)}
-          style={[s.felt, { left: 60 * k, top: 84 * k, width: 180 * k, height: 260 * k, borderRadius: 90 * k }]}
+          style={[s.felt, { borderColor: c.tableBorder, left: 60 * k, top: 84 * k, width: 180 * k, height: 260 * k, borderRadius: 90 * k }]}
         >
           <T size={28} weight="800">{seats.length}</T>
           <T tone="muted" size={12}>{t.seating.seatsShort}</T>
@@ -52,8 +53,8 @@ export function SeatingTable({ seats }: { seats: readonly { id: string; name: st
               <T size={12} numberOfLines={1} maxFontSizeMultiplier={1.3}>{seat.name}</T>
               <T tone="muted" size={10} maxFontSizeMultiplier={1.3}>{t.seating.seat(i + 1)}</T>
               {i === 0 && (
-                <View style={[s.dealer, { left: SEAT_W / 2 + avatar / 2 - 4, top: avatar - 14 }]}>
-                  <T size={11} weight="800" style={{ color: "#000" }} maxFontSizeMultiplier={1.3} importantForAccessibility="no">D</T>
+                <View style={[s.dealer, { backgroundColor: c.dealer, left: SEAT_W / 2 + avatar / 2 - 4, top: avatar - 14 }]}>
+                  <T size={11} weight="800" style={{ color: c.onDealer }} maxFontSizeMultiplier={1.3} importantForAccessibility="no">D</T>
                 </View>
               )}
             </View>
@@ -66,7 +67,7 @@ export function SeatingTable({ seats }: { seats: readonly { id: string; name: st
 
 const s = StyleSheet.create({
   wrap: { width: "100%", alignItems: "center", marginTop: 8 },
-  felt: { position: "absolute", borderWidth: 2, borderColor: "rgba(167,139,250,0.35)", alignItems: "center", justifyContent: "center" },
+  felt: { position: "absolute", borderWidth: 2, alignItems: "center", justifyContent: "center" },
   seat: { position: "absolute", width: SEAT_W, alignItems: "center", gap: 3 },
-  dealer: { position: "absolute", width: 22, height: 22, borderRadius: 11, backgroundColor: c.text, alignItems: "center", justifyContent: "center" },
+  dealer: { position: "absolute", width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center" },
 });

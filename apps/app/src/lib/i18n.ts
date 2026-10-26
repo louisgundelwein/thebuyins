@@ -7,6 +7,12 @@ import { getLocales } from "expo-localization";
 const de = {
   tab: { overview: "Übersicht", live: "Live", newGame: "Neues Spiel", running: "Spiel läuft" },
   language: { title: "Sprache", system: "System", de: "Deutsch", en: "English" },
+  appearance: {
+    title: "Darstellung", light: "Hell", dark: "Dunkel", system: "System",
+    saving: "Wird gespeichert…",
+    saveFailed: "Darstellung nicht gespeichert. Bitte wähle sie erneut.",
+    systemUsing: (mode: string) => `Geräteeinstellung: ${mode}`,
+  },
   common: {
     back: "Zurück",
     loading: "Lädt…",
@@ -64,6 +70,7 @@ const de = {
   },
   game: {
     potOf: (title: string) => `Pot · ${title}`,
+    buyInCount: (count: number) => `${count} Buy-ins`,
     buyInOf: (amount: string, count: number) => `Buy-in ${amount} · ${count} Buy-ins`,
     out: "raus",
     rebuyFor: (name: string) => `Nachkauf für ${name}`,
@@ -214,6 +221,12 @@ export type Dict = typeof de;
 const en: Dict = {
   tab: { overview: "Overview", live: "Live", newGame: "New game", running: "game running" },
   language: { title: "Language", system: "System", de: "Deutsch", en: "English" },
+  appearance: {
+    title: "Appearance", light: "Light", dark: "Dark", system: "System",
+    saving: "Saving…",
+    saveFailed: "Appearance was not saved. Please select it again.",
+    systemUsing: (mode: string) => `Device setting: ${mode}`,
+  },
   common: {
     back: "Back",
     loading: "Loading…",
@@ -271,6 +284,7 @@ const en: Dict = {
   },
   game: {
     potOf: (title: string) => `Pot · ${title}`,
+    buyInCount: (count: number) => `${count} buy-ins`,
     buyInOf: (amount: string, count: number) => `Buy-in ${amount} · ${count} ${count === 1 ? "buy-in" : "buy-ins"}`,
     out: "out",
     rebuyFor: (name: string) => `Rebuy for ${name}`,

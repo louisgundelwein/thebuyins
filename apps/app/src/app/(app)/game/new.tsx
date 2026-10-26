@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { parseResponse } from "hono/client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { SeatingTable } from "@/components/seating-table";
 import { Avatar, Button, Chip, Field, Loading, Notice, PAGE_TOP, Screen, T } from "@/components/ui";
@@ -10,7 +10,8 @@ import { shareInvite } from "@/lib/invite";
 import { useLanguage } from "@/lib/language";
 import { parseCents } from "@/lib/money";
 import { useGroup } from "@/lib/queries";
-import { c } from "@/lib/theme";
+import { type Colors } from "@/lib/theme";
+import { useTheme } from "@/lib/appearance";
 
 /** Fisher–Yates shuffle into a new array. */
 function shuffle<T>(items: readonly T[]): T[] {
@@ -32,6 +33,8 @@ const chunk = <T,>(items: readonly T[], size: number) =>
  */
 export default function NewGame() {
   const { t, locale, money } = useLanguage();
+  const { c } = useTheme();
+  const s = useMemo(() => createStyles(c), [c]);
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const page = useGroup(groupId);
   const qc = useQueryClient();
@@ -175,6 +178,7 @@ export default function NewGame() {
                 onPress={() => toggle(m.id)}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: on }}
+                aria-checked={on}
                 accessibilityLabel={`${m.displayName}, ${tag}`}
               >
                 <Avatar id={m.id} name={m.displayName} guest={isGuest} size={46} />
@@ -206,7 +210,7 @@ export default function NewGame() {
             <T
               size={13}
               weight="700"
-              style={{ color: "#c4b5fd" }}
+              style={{ color: c.accentText }}
               onPress={() => void shareInvite(group, t).then((r) => setCopied(r === "copied"))}
             >
               {copied ? t.newGame.linkCopied : t.newGame.shareInvite}
@@ -220,17 +224,18 @@ export default function NewGame() {
   );
 }
 
-const s = StyleSheet.create({
+/** Player selection and guest hints use the same appearance as the rest of the app. */
+const createStyles = (c: Colors) => StyleSheet.create({
   top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: PAGE_TOP + 16, marginBottom: 2 },
   fields: { flexDirection: "row", gap: 8, alignItems: "center" },
   footer: { flexDirection: "row", gap: 10 },
   gridRow: { flexDirection: "row", gap: 10 },
   tile: { flex: 1, alignItems: "center", gap: 6, paddingVertical: 14, paddingHorizontal: 6, borderRadius: 18, borderWidth: 2 },
-  tileOn: { backgroundColor: "rgba(255,255,255,0.04)", borderColor: c.accent },
-  tileOff: { backgroundColor: "rgba(255,255,255,0.04)", borderColor: "transparent" },
-  addTile: { borderWidth: 1.5, borderStyle: "dashed", borderColor: "rgba(255,255,255,0.15)" },
+  tileOn: { backgroundColor: c.row, borderColor: c.accent },
+  tileOff: { backgroundColor: c.row, borderColor: c.transparent },
+  addTile: { borderWidth: 1.5, borderStyle: "dashed", borderColor: c.dashedBorder },
   tag: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, backgroundColor: c.faint },
-  tagAccount: { backgroundColor: "rgba(94,234,212,0.14)" },
+  tagAccount: { backgroundColor: c.posSoft },
   tagSpacer: { height: 18 },
   hint: { borderRadius: 18, padding: 12, backgroundColor: c.accentSoft, marginTop: 2 },
 });

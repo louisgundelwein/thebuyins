@@ -10,7 +10,7 @@ import { authClient } from "@/lib/auth";
 import { useLanguage } from "@/lib/language";
 import { parseCents } from "@/lib/money";
 import { keys, useGame, useGameMutation, useGroup } from "@/lib/queries";
-import { c } from "@/lib/theme";
+import { useTheme } from "@/lib/appearance";
 
 /** Where a game is shown: its own route (below a back header) or the Live tab (own top bar, above the dock). */
 type Frame = { header?: ReactNode; dock?: boolean };
@@ -41,6 +41,7 @@ function useTotals(state: GameState) {
 
 function Table({ state, frame, onSettle }: { state: GameState; frame: Frame; onSettle: () => void }) {
   const { t, locale, money } = useLanguage();
+  const { c } = useTheme();
   const { game, seats, summary } = state;
   const { bySeat } = useTotals(state);
   const group = useGroup(game.groupId);
@@ -77,7 +78,7 @@ function Table({ state, frame, onSettle }: { state: GameState; frame: Frame; onS
           <Row key={s.id} dim={out}>
             <View
               accessible
-              accessibilityLabel={t.game.seatRow(s.name, money(paidIn), out ? money(s.cashOutCents ?? 0) : undefined)}
+              accessibilityLabel={`${t.game.seatRow(s.name, money(paidIn), out ? money(s.cashOutCents ?? 0) : undefined)}, ${t.game.buyInCount(ins.length)}`}
               style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 12 }}
             >
               <T tone="muted" size={13} style={{ width: 16 }}>{s.position || ""}</T>
@@ -89,7 +90,7 @@ function Table({ state, frame, onSettle }: { state: GameState; frame: Frame; onS
                   {out ? <T tone="muted" size={12}>  {t.game.out}</T> : null}
                 </T>
                 <View style={{ flexDirection: "row", gap: 3 }}>
-                  {ins.map((b) => <View key={b.id} style={{ width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: "rgba(255,255,255,0.35)", backgroundColor: c.accent }} />)}
+                  {ins.map((b) => <View key={b.id} style={{ width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: c.buyInBorder, backgroundColor: c.accent }} />)}
                 </View>
               </View>
               <T tone="muted">{money(paidIn)}</T>
@@ -296,6 +297,7 @@ function Result({ state, frame }: { state: GameState; frame: Frame }) {
 
 function Transfer({ from, to, cents, nameOf }: { from: string; to: string; cents: number; nameOf: (id: string) => string }) {
   const { t, money } = useLanguage();
+  const { c } = useTheme();
   return (
     <Row label={t.settle.transferRow(nameOf(from), nameOf(to), money(cents))}>
       <Avatar id={from} name={nameOf(from)} />

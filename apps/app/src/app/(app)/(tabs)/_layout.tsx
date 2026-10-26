@@ -1,17 +1,19 @@
 import { router, Tabs } from "expo-router";
-import type { ComponentProps } from "react";
+import { useMemo, type ComponentProps } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChartIcon, ChipIcon } from "@/components/icons";
 import { useSelectedGroup } from "@/lib/group";
 import { useLanguage } from "@/lib/language";
 import { useGroup } from "@/lib/queries";
-import { c } from "@/lib/theme";
+import { control, type Colors } from "@/lib/theme";
+import { useTheme } from "@/lib/appearance";
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
 export default function TabsLayout() {
   const { t } = useLanguage();
+  const { c } = useTheme();
   return (
     <Tabs tabBar={(props) => <Dock {...props} />} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: c.bg } }}>
       <Tabs.Screen name="index" options={{ title: t.tab.overview }} />
@@ -23,6 +25,8 @@ export default function TabsLayout() {
 /** Floating glass dock: overview, a raised plus for a new game, and Live with a dot while a game runs. */
 function Dock({ state, navigation }: TabBarProps) {
   const { t } = useLanguage();
+  const { c } = useTheme();
+  const s = useMemo(() => createStyles(c), [c]);
   const insets = useSafeAreaInsets();
   const { groupId } = useSelectedGroup();
   const page = useGroup(groupId);
@@ -38,9 +42,10 @@ function Dock({ state, navigation }: TabBarProps) {
         accessibilityRole="tab"
         accessibilityLabel={dot ? `${label}, ${t.tab.running}` : label}
         accessibilityState={{ selected: on }}
+        aria-selected={on}
       >
         <View importantForAccessibility="no" accessibilityElementsHidden>
-          <Icon color={on ? c.accent : "rgba(255,255,255,0.5)"} />
+          <Icon color={on ? c.accent : c.muted} />
           {dot && <View style={s.dot} />}
         </View>
         <Text maxFontSizeMultiplier={1.4} style={[s.label, on && { color: c.text }]}>{label}</Text>
@@ -58,6 +63,7 @@ function Dock({ state, navigation }: TabBarProps) {
         accessibilityRole="button"
         accessibilityLabel={t.tab.newGame}
         accessibilityState={{ disabled: !groupId }}
+        aria-disabled={!groupId}
       >
         <Text style={s.plusText} importantForAccessibility="no">+</Text>
       </Pressable>
@@ -66,7 +72,8 @@ function Dock({ state, navigation }: TabBarProps) {
   );
 }
 
-const s = StyleSheet.create({
+/** Floating dock geometry with appearance-specific surfaces. */
+const createStyles = (c: Colors) => StyleSheet.create({
   dock: {
     position: "absolute",
     alignSelf: "center",
@@ -74,17 +81,17 @@ const s = StyleSheet.create({
     maxWidth: 420,
     height: 66,
     borderRadius: 26,
-    backgroundColor: "rgba(30,26,46,0.92)",
+    backgroundColor: c.dock,
     borderWidth: 1,
     borderColor: c.border,
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    boxShadow: "0 12px 32px rgba(0,0,0,0.45)",
+    boxShadow: c.dockShadow,
   },
-  tab: { width: 90, alignItems: "center", gap: 4 },
-  dot: { position: "absolute", right: -3, top: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: c.pos, borderWidth: 2, borderColor: "#1e1a2e" },
-  label: { fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: "600" },
+  tab: { width: 90, minHeight: control.minHeight, alignItems: "center", justifyContent: "center", gap: 4 },
+  dot: { position: "absolute", right: -3, top: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: c.pos, borderWidth: 2, borderColor: c.dock },
+  label: { fontSize: 11, color: c.muted, fontWeight: "600" },
   plus: {
     width: 58,
     height: 58,
@@ -93,7 +100,7 @@ const s = StyleSheet.create({
     backgroundColor: c.accent,
     alignItems: "center",
     justifyContent: "center",
-    boxShadow: "0 10px 28px rgba(167,139,250,0.4)",
+    boxShadow: c.plusShadow,
   },
   plusText: { color: c.onAccent, fontSize: 30, fontWeight: "500", marginTop: -2 },
 });
