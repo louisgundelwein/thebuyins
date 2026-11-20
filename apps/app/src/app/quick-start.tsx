@@ -267,11 +267,13 @@ export default function QuickStart() {
                 .filter((entry) => entry.playerId === player.id)
                 .reduce((total, entry) => total + entry.amountCents, 0)))}
               value={drafts[player.id] ?? ""}
-              onChangeText={(value) => setDrafts((previous) => ({ ...previous, [player.id]: value }))}
+              onChangeText={(value) => {
+                if (!writing.current) setDrafts((previous) => ({ ...previous, [player.id]: value }));
+              }}
               onBlur={() => {
                 if (error !== "save") void save({ ...current, entries: [...buyIns, ...cashOuts] }, true);
               }}
-              editable={error !== "save"}
+              editable={!locked}
               maxLength={10}
               keyboardType="decimal-pad"
             />
