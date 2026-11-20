@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { useRef } from "react";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AppearanceProvider, useTheme } from "@/lib/appearance";
 import { authClient } from "@/lib/auth";
@@ -29,8 +30,14 @@ function RootNavigator() {
     ...base,
     colors: { ...base.colors, background: c.bg, card: c.sheet, text: c.text, primary: c.accent, border: c.border, notification: c.neg },
   };
-  // The local game must be reachable while the network session is loading.
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
+  const sessionChecked = useRef(false);
+  const pathname = usePathname();
+  const publicEntry = pathname === "/" || pathname === "/sign-in" || pathname === "/quick-start"
+    || pathname === "/join" || pathname === "/privacy" || pathname === "/support";
+  if (!isPending) sessionChecked.current = true;
+  // Keep cold links to protected screens intact while the first session resolves.
+  if (!sessionChecked.current && !publicEntry) return null;
 
   return (
     <>

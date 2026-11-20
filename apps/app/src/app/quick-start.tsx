@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Share, View } from "react-native";
 import { Avatar, Button, Chip, Field, Heading, Hero, Loading, Notice, PAGE_TOP, Row, Screen, T } from "@/components/ui";
 import { useLanguage } from "@/lib/language";
-import { createQuickGame, loadQuickGame, saveQuickGame, type QuickGame } from "@/lib/quick-game";
+import { createQuickGame, discardQuickGame, loadQuickGame, saveQuickGame, type QuickGame } from "@/lib/quick-game";
 
 /** Parse euros without rounding; cap amounts at the same limit for each player. */
 function cents(value: string): number | null {
@@ -19,9 +19,11 @@ export default function QuickStart() {
   const q = t.quickStart;
   const [game, setGame] = useState<QuickGame | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState<"load" | "save" | "share" | null>(null);
+  const [error, setError] = useState<"load" | "reset" | "save" | "share" | null>(null);
   const [pending, setPending] = useState(false);
   const writing = useRef(false);
+  const latestSave = useRef(0);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [names, setNames] = useState(["", ""]);
   const [buyIn, setBuyIn] = useState("");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -46,22 +48,45 @@ export default function QuickStart() {
   }, []);
   useEffect(() => { void load(); }, [load]);
 
-  async function save(next: QuickGame) {
+  async function save(next: QuickGame, payoutDraft = false) {
     if (writing.current) return;
-    writing.current = true;
-    setPending(true);
+    const saveId = ++latestSave.current;
+    if (!payoutDraft) {
+      writing.current = true;
+      setPending(true);
+    }
     setError(null);
     try {
       await saveQuickGame(next);
+      if (saveId !== latestSave.current) return;
       setGame(next);
       setRetryGame(null);
       if (next.phase === "live" && !next.entries.some((entry) => entry.kind === "cash_out")) setDrafts({});
     } catch {
+      if (saveId !== latestSave.current) return;
       setRetryGame(next);
       setError("save");
     } finally {
+      if (!payoutDraft) {
+        writing.current = false;
+        setPending(false);
+      }
+    }
+  }
+
+  async function reset() {
+    if (writing.current) return;
+    writing.current = true;
+    setPending(true);
+    try {
+      await discardQuickGame();
+      await load();
+    } catch {
+      setError("reset");
+    } finally {
       writing.current = false;
       setPending(false);
+      setConfirmReset(false);
     }
   }
 
@@ -79,8 +104,18 @@ export default function QuickStart() {
   if (!loaded) {
     if (!error) return <Loading />;
     return (
-      <Screen footer={<Button title={q.retry} onPress={() => void load()} />}>
-        <View style={{ marginTop: PAGE_TOP }}><Notice>{q.loadError}</Notice></View>
+      <Screen>
+        <View style={{ marginTop: PAGE_TOP, gap: formLayout.gap }}>
+          <Notice>{error === "reset" ? q.resetError : q.loadError}</Notice>
+          {confirmReset ? <>
+            <T>{q.confirmReset}</T>
+            <Button title={q.reset} variant="soft" loading={pending} onPress={() => void reset()} />
+            <Button title={t.common.cancel} variant="ghost" disabled={pending} onPress={() => setConfirmReset(false)} />
+          </> : <>
+            <Button title={q.retry} onPress={() => void load()} />
+            <Button title={q.reset} variant="ghost" onPress={() => setConfirmReset(true)} />
+          </>}
+        </View>
       </Screen>
     );
   }
@@ -234,8 +269,7 @@ export default function QuickStart() {
               value={drafts[player.id] ?? ""}
               onChangeText={(value) => setDrafts((previous) => ({ ...previous, [player.id]: value }))}
               onBlur={() => {
-                const entries = [...buyIns, ...cashOuts];
-                if (JSON.stringify(entries) !== JSON.stringify(current.entries)) void save({ ...current, entries });
+                if (error !== "save") void save({ ...current, entries: [...buyIns, ...cashOuts] }, true);
               }}
               editable={error !== "save"}
               maxLength={10}

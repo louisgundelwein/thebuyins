@@ -90,6 +90,17 @@ export function loadQuickGame(): Promise<QuickGame | null> {
   });
 }
 
+/** Discards the saved game after the host confirms a reset. */
+export function discardQuickGame(): Promise<void> {
+  return serial(async () => {
+    if (Platform.OS === "web") {
+      localStorage.removeItem(KEY);
+    } else {
+      await SecureStore.deleteItemAsync(KEY);
+    }
+  });
+}
+
 /** Atomically replaces the one saved game; storage errors are surfaced to the caller. */
 export async function saveQuickGame(game: QuickGame): Promise<void> {
   validate(game);
