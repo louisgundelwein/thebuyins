@@ -1,5 +1,6 @@
+import { router } from "expo-router";
 import { AuthForm } from "@/components/auth-form";
-import { Hero, Screen, T } from "@/components/ui";
+import { Button, Hero, Screen, T } from "@/components/ui";
 import { useLanguage } from "@/lib/language";
 
 /** Landing screen for signed-out users. */
@@ -11,6 +12,8 @@ export default function SignIn() {
         <T size={40} weight="800" accessibilityLabel="The Buy-Ins">♠ The Buy-Ins</T>
         <T tone="muted">{t.auth.tagline}</T>
       </Hero>
+      <Button title={t.quickStart.localGame} onPress={() => router.push("/quick-start")} />
+      <T tone="muted">{t.quickStart.offline}</T>
       <AuthForm />
     </Screen>
   );

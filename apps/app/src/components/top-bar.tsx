@@ -32,7 +32,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
   const user = session?.user;
   const current = groups.data?.find((g) => g.id === groupId);
   const close = () => setMenu(null);
-  const go = (href: "/group/new" | "/group/members" | "/join" | "/account" | "/archive") => {
+  const go = (href: "/group/new" | "/group/members" | "/join" | "/account" | "/archive" | "/quick-start") => {
     close();
     router.push(href);
   };
@@ -88,6 +88,7 @@ export function TopBar({ left }: { left?: ReactNode }) {
           </Item>
         )}
         <Item onPress={() => go("/group/new")} icon="plus">{t.topBar.newGroup}</Item>
+        <Item onPress={() => go("/quick-start")} icon="plus">{t.quickStart.localGame}</Item>
         <Item onPress={() => go("/archive")} icon="chevron">{t.archive.title}</Item>
         <Item onPress={() => go("/account")} icon="chevron">{t.common.account}</Item>
         <View style={s.language}>

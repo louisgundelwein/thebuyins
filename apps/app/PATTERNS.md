@@ -21,3 +21,11 @@ The profile menu offers **Hell / Dunkel / System**, alongside language. The sele
 - Small sign of care: the live buy-in dots remain static, match the number of actual buy-in records, and expose that count in the spoken player label. They are information; adjacent rebuy controls remain distinct. No new animation is required.
 
 Do not build: alternate navigation, an additional appearance settings screen, decorative poker textures, or money celebration effects as part of this change.
+
+# Local quick start
+
+The signed-out landing screen offers a local game above the group sign-in form. Signed-in hosts can open it from the profile menu or the empty group overview. The ordinary group game keeps its existing entry point.
+
+The setup screen collects names and one buy-in together. The live screen keeps the pot above the player list, uses the existing buy-in dots, and confirms the person and amount when a rebuy is recorded. Undo stays by that confirmation. Cash-out entry keeps any difference visible so the host can correct it before sharing a balanced settlement.
+
+Quick games are stored on this device. Reopening the quick start restores the latest saved phase. A failed write leaves the previous saved state intact and explains how to retry. A finished game can start a new round with the same names and buy-in.

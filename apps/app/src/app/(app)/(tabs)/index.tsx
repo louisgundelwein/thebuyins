@@ -40,6 +40,7 @@ export default function Overview() {
           <T size={28} weight="800">{t.overview.welcome}</T>
           <T tone="muted">{t.overview.welcomeText}</T>
         </Hero>
+        <Button title={t.quickStart.localGame} variant="soft" onPress={() => router.push("/quick-start")} />
         <Button title={t.overview.createGroup} onPress={() => router.push("/group/new")} />
         <Button title={t.topBar.join} variant="ghost" onPress={() => router.push("/join")} />
         <Button title={t.archive.title} variant="ghost" onPress={() => router.push("/archive")} />
