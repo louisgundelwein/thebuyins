@@ -50,9 +50,14 @@ export default function Overview() {
 
   const data = page.data;
   const days = RANGES.find((r) => r.key === range)?.days ?? Infinity;
-  const history = (data?.history ?? []).filter((h) => Date.now() - new Date(h.startedAt).getTime() <= days * DAY);
-  let running = 0;
-  const points = history.map((h) => (running += h.netCents));
+  const cutoff = page.dataUpdatedAt - days * DAY;
+  const history = (data?.history ?? []).filter((h) => new Date(h.startedAt).getTime() >= cutoff);
+  const points: number[] = [];
+  let balance = 0;
+  for (const game of history) {
+    balance += game.netCents;
+    points.push(balance);
+  }
   const last = history.at(-1);
   // Former members stay listed so standings and history still show their names.
   const people = [...(data?.members ?? []), ...(data?.formerMembers ?? [])];
@@ -64,7 +69,7 @@ export default function Overview() {
 
       <Hero>
         <T tone="muted" size={13}>{t.overview.balance}</T>
-        <T size={40} weight="800" tone={toneOf(running)}>{signedMoney(running)}</T>
+        <T size={40} weight="800" tone={toneOf(balance)}>{signedMoney(balance)}</T>
         {last ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <ChevronIcon direction={last.netCents >= 0 ? "up" : "down"} size={12} color={last.netCents >= 0 ? c.pos : c.neg} />

@@ -1,5 +1,4 @@
-import { Stack } from "expo-router";
-import { router } from "expo-router";
+import { Stack, router } from "expo-router";
 import { View } from "react-native";
 import { CloseButton } from "@/components/ui";
 import { GroupProvider } from "@/lib/group";

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -32,9 +32,11 @@ function RootNavigator() {
   };
   const { data: session, isPending } = authClient.useSession();
   // Better Auth refetches the session on foreground. Block only the first load so forms survive.
-  const loaded = useRef(false);
-  if (!isPending) loaded.current = true;
-  if (!loaded.current) return null;
+  const [loaded, setLoaded] = useState(!isPending);
+  if (!loaded) {
+    if (isPending) return null;
+    setLoaded(true);
+  }
 
   return (
     <>
