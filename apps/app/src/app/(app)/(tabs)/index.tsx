@@ -29,7 +29,7 @@ export default function Overview() {
   const groups = useGroups();
   const { groupId } = useSelectedGroup();
   const page = useGroup(groupId);
-  const [range, setRange] = useState<Range>("all");
+  const [range, setRange] = useState<{ key: Range; selectedAt: number }>({ key: "all", selectedAt: 0 });
 
   if (groups.isPending) return <Loading />;
 
@@ -49,8 +49,8 @@ export default function Overview() {
   }
 
   const data = page.data;
-  const days = RANGES.find((r) => r.key === range)?.days ?? Infinity;
-  const cutoff = page.dataUpdatedAt - days * DAY;
+  const days = RANGES.find((r) => r.key === range.key)?.days ?? Infinity;
+  const cutoff = Math.max(page.dataUpdatedAt, range.selectedAt) - days * DAY;
   const history = (data?.history ?? []).filter((h) => new Date(h.startedAt).getTime() >= cutoff);
   const points: number[] = [];
   let balance = 0;
@@ -82,7 +82,12 @@ export default function Overview() {
         <BalanceChart points={points} />
         <View style={{ flexDirection: "row", gap: 6 }}>
           {RANGES.map((r) => (
-            <Chip key={r.key} title={t.overview.ranges[r.key]} active={range === r.key} onPress={() => setRange(r.key)} />
+            <Chip
+              key={r.key}
+              title={t.overview.ranges[r.key]}
+              active={range.key === r.key}
+              onPress={() => setRange({ key: r.key, selectedAt: Date.now() })}
+            />
           ))}
         </View>
       </Hero>
