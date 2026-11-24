@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { parseResponse } from "hono/client";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { SeatingTable } from "@/components/seating-table";
 import { Avatar, Button, Chip, Field, Loading, Notice, PAGE_TOP, Screen, T } from "@/components/ui";
 import { api } from "@/lib/api";
+import { useSessionAd } from "@/lib/session-ad";
 import { shareInvite } from "@/lib/invite";
 import { useLanguage } from "@/lib/language";
 import { parseCents } from "@/lib/money";
@@ -55,9 +56,13 @@ export default function NewGame() {
     },
   });
 
+  const showSessionAd = useSessionAd();
+  const starting = useRef(false);
+  const [showingAd, setShowingAd] = useState(false);
   const start = useMutation({
     mutationFn: ({ buyInCents, memberIds }: { buyInCents: number; memberIds: string[] }) =>
       parseResponse(api.groups[":groupId"].games.$post({ param: { groupId }, json: { title, buyInCents, memberIds } })),
+    onError: () => { starting.current = false; },
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["group", groupId] });
       router.replace("/live");
@@ -93,8 +98,15 @@ export default function NewGame() {
             <View style={{ flex: 2 }}>
               <Button
                 title={t.newGame.start}
-                loading={start.isPending}
-                onPress={() => start.mutate({ buyInCents: cents, memberIds: [...order] })}
+                loading={showingAd || start.isPending}
+                onPress={async () => {
+                  if (starting.current) return;
+                  starting.current = true;
+                  setShowingAd(true);
+                  await showSessionAd();
+                  start.mutate({ buyInCents: cents, memberIds: [...order] });
+                  setShowingAd(false);
+                }}
               />
             </View>
           </View>

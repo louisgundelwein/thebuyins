@@ -26,3 +26,7 @@ export ANDROID_HOME=~/Android/Sdk JAVA_HOME=<JDK 17>
 pnpm --filter @thebuyins/app android        # nativer Build + Installation
 adb reverse tcp:3000 tcp:3000              # API im Emulator unter localhost
 ```
+
+### Session-start test ads
+
+Set `BUYINS_TEST_ADS=1` during native prebuild, build, and when starting Metro for that build. Rebuild the native app after changing this setting. The final Start button after the seat draw can show one preloaded Google sample ad. If consent is missing or the ad is unavailable, the usual start request proceeds immediately. Expo Go and web skip ads.
