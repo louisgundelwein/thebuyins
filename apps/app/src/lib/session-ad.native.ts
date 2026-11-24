@@ -16,7 +16,7 @@ export function useSessionAd() {
     async function prepare() {
       const { default: mobileAds, AdsConsent, AdsConsentStatus, AdEventType, InterstitialAd, TestIds } =
         await import("react-native-google-mobile-ads");
-      const info = await AdsConsent.requestInfoUpdate();
+      const info = await AdsConsent.gatherConsent();
       if (cancelled || !info.canRequestAds) return;
       if (info.status !== AdsConsentStatus.NOT_REQUIRED) {
         if (info.status !== AdsConsentStatus.OBTAINED ||
