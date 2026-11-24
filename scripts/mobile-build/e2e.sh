@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # iOS smoke test for CI: Release build for the simulator, install, launch, check the app stays up, screenshot.
-# Runs from the repo root on a fresh MINIONS VM; the toolchain comes from the image (scripts/minions/lib.sh).
+# Runs from the repo root on a disposable Mac checkout; the toolchain comes from the image (scripts/mobile-build/lib.sh).
 # Output goes to ~/ci-e2e. Any failure exits non-zero.
 set -euo pipefail
 
 ROOT="$(pwd)"
 APP_DIR="$ROOT/apps/app"
-# shellcheck source=scripts/minions/lib.sh
-source "$ROOT/scripts/minions/lib.sh"
+# shellcheck source=scripts/mobile-build/lib.sh
+source "$ROOT/scripts/mobile-build/lib.sh"
 OUT="$HOME/ci-e2e"
 DERIVED="$OUT/derived"
 SHOT="$OUT/screenshot.png"

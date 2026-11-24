@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Check for every branch, no secrets: typecheck and tests from the repo, then a Release build for the iOS simulator.
-# Uses no signing identity or secrets, and nothing is installed or run. Runs from the repo root on a fresh MINIONS VM. Output goes to ~/ci-check.
+# Uses no signing identity or secrets, and nothing is installed or run. Runs from the repo root on a disposable Mac checkout. Output goes to ~/ci-check.
 # Any failure exits non-zero.
 set -euo pipefail
 
@@ -10,8 +10,8 @@ OUT="$HOME/ci-check"
 DERIVED="$OUT/derived"
 
 [[ -f "$APP_DIR/app.json" ]] || { echo "run from the repo root: $APP_DIR/app.json not found" >&2; exit 1; }
-# shellcheck source=scripts/minions/lib.sh
-source "$ROOT/scripts/minions/lib.sh"
+# shellcheck source=scripts/mobile-build/lib.sh
+source "$ROOT/scripts/mobile-build/lib.sh"
 
 phase "toolchain"
 check_toolchain
