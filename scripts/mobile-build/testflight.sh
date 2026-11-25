@@ -6,8 +6,8 @@ set -euo pipefail
 
 ROOT="$(pwd)"
 APP_DIR="$ROOT/apps/app"
-# shellcheck source=scripts/minions/lib.sh
-source "$ROOT/scripts/minions/lib.sh"
+# shellcheck source=scripts/mobile-build/lib.sh
+source "$ROOT/scripts/mobile-build/lib.sh"
 OUT="$HOME/ci-testflight"
 ARCHIVE="$OUT/TheBuyIns.xcarchive"
 EXPORT="$OUT/export"
