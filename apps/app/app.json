@@ -2,14 +2,14 @@
   "expo": {
     "name": "The Buy-Ins",
     "slug": "thebuyins",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "thebuyins",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.thebuyins.app",
-      "buildNumber": "11",
+      "buildNumber": "29926695",
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
@@ -60,7 +60,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.thebuyins.app",
-      "versionCode": 7,
+      "versionCode": 8,
       "intentFilters": [
         {
           "action": "VIEW",
