@@ -2,8 +2,8 @@ import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useEffect, useSyncExternalStore } from "react";
 import { Platform } from "react-native";
 import type { Purchase } from "expo-iap";
+// Type-only: tsc resolves "./adfree" to the web file, whose types this module must match.
 import type * as web from "./adfree";
-import type { AdFreeState, BuyResult, PriceState } from "./adfree";
 
 /** One-time (non-consumable) product, same id in App Store Connect and Play Console. */
 const SKU = "com.thebuyins.app.adfree";
@@ -12,7 +12,7 @@ const SKU = "com.thebuyins.app.adfree";
 const storeAvailable = Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
 
 type Store = typeof import("expo-iap");
-type Snapshot = { entitlement: AdFreeState; price: PriceState };
+type Snapshot = { entitlement: web.AdFreeState; price: web.PriceState };
 
 let snapshot: Snapshot = {
   entitlement: storeAvailable ? { status: "loading" } : { status: "unavailable" },
@@ -53,9 +53,9 @@ function connect(): Promise<Store> {
 }
 
 /** The running buy() call, settled by the store's purchase events. */
-let waiting: { resolve: (result: BuyResult) => void; reject: (error: unknown) => void } | undefined;
+let waiting: { resolve: (result: web.BuyResult) => void; reject: (error: unknown) => void } | undefined;
 
-function settle(outcome: { result: BuyResult } | { error: unknown }) {
+function settle(outcome: { result: web.BuyResult } | { error: unknown }) {
   const current = waiting;
   waiting = undefined;
   if (!current) return;
@@ -163,11 +163,11 @@ function load(): Promise<void> {
   return loaded;
 }
 
-async function buy(): Promise<BuyResult> {
+async function buy(): Promise<web.BuyResult> {
   const store = await connect();
   if (snapshot.price.status !== "ready") await loadPrice(store);
   if (waiting) throw new Error("A purchase is already running");
-  const result = new Promise<BuyResult>((resolve, reject) => { waiting = { resolve, reject }; });
+  const result = new Promise<web.BuyResult>((resolve, reject) => { waiting = { resolve, reject }; });
   store.requestPurchase({ type: "in-app", request: { apple: { sku: SKU }, google: { skus: [SKU] } } })
     .catch((error: unknown) => onPurchaseError(store, error));
   return result;
