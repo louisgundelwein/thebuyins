@@ -1,6 +1,8 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActionRow, Button, Field, Heading, Notice, PAGE_TOP, Row, Screen, Skeleton, T } from "@/components/ui";
+import { CurrencyPicker, CurrencyPreferenceStatus } from "@/components/currency-picker";
+import { useDefaultCurrency } from "@/lib/default-currency";
 import { CheckIcon } from "@/components/icons";
 import { authErrorMessage } from "@/components/auth-form";
 import { useAdFree } from "@/lib/adfree";
@@ -15,6 +17,7 @@ type Restore = "idle" | "busy" | "found" | "none" | "failed";
 /** Account details, the ad-free purchase and self-service deletion (required by App Store and Google Play). */
 export default function Account() {
   const { t } = useLanguage();
+  const { preference, save } = useDefaultCurrency();
   const { c } = useTheme();
   const { data: session } = authClient.useSession();
   const [password, setPassword] = useState("");
@@ -79,6 +82,16 @@ export default function Account() {
         <T style={{ flex: 1 }}>{session?.user.name}</T>
         <T tone="muted" size={13}>{session?.user.email}</T>
       </Row>
+      {preference.data ? (
+        <CurrencyPicker
+          title={t.currency.defaultTitle}
+          hint={t.currency.defaultHint}
+          value={preference.data}
+          onChange={save.mutate}
+          saving={save.isPending}
+          error={save.isError}
+        />
+      ) : <CurrencyPreferenceStatus error={preference.isError} retry={() => void preference.refetch()} />}
       <Button title={t.account.privacy} variant="ghost" onPress={() => router.push("/privacy")} />
       {adPrivacyOptions && !owned && (
         <>

@@ -1,3 +1,4 @@
+import type { Currency } from "@thebuyins/core";
 import { useState } from "react";
 import { View } from "react-native";
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
@@ -8,7 +9,7 @@ import { useTheme } from "@/lib/appearance";
  * Stock-style area chart of a running balance. `points` are cumulative cents, one per game;
  * a leading 0 is added so the line starts at the baseline. Colour follows the final sign.
  */
-export function BalanceChart({ points, height = 120 }: { points: readonly number[]; height?: number }) {
+export function BalanceChart({ points, currency, height = 120 }: { currency: Currency; points: readonly number[]; height?: number }) {
   const { t, signedMoney } = useLanguage();
   const { c } = useTheme();
   const [width, setWidth] = useState(0);
@@ -31,7 +32,7 @@ export function BalanceChart({ points, height = 120 }: { points: readonly number
       onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
       accessible
       accessibilityRole="image"
-      accessibilityLabel={t.chart.balance(signedMoney(values.at(-1) ?? 0))}
+      accessibilityLabel={t.chart.balance(signedMoney(values.at(-1) ?? 0, currency))}
     >
       {width > 0 && (
         <Svg width={width} height={height}>

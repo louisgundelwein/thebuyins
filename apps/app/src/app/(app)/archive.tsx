@@ -43,7 +43,7 @@ export default function Archive() {
               {h.groupName} · {new Date(h.startedAt).toLocaleDateString(locale, { weekday: "short", day: "2-digit", month: "2-digit" })} · {t.overview.placeOf(h.rank, h.players)}
             </T>
           </Pressable>
-          <T weight="700" tone={toneOf(h.netCents)}>{signedMoney(h.netCents)}</T>
+          <T weight="700" tone={toneOf(h.netCents)}>{signedMoney(h.netCents, h.currency)}</T>
           {confirmId === h.gameId ? (
             <View style={{ flexDirection: "row", gap: 14 }}>
               <Pressable onPress={() => hide.mutate(h.gameId)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t.archive.removeLabel(h.title)}>

@@ -1,4 +1,4 @@
-import { distributeDifference } from "@thebuyins/core";
+import { distributeDifference, maxMinorAmount } from "@thebuyins/core";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq, isNull } from "drizzle-orm";
 import { Hono } from "hono";
@@ -6,19 +6,25 @@ import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../db";
 import { buyIn, game, hiddenGame, member, seat } from "../db/schema/poker";
-import { memberOf, membershipOf, requireUser, type AppEnv } from "../middleware";
+import { memberOf, requireCurrencySupport, requireUser, type AppEnv } from "../middleware";
 import { loadGame } from "../stats";
 
 /**
  * Loads a game the caller may see: any group member, or a former member who played in it.
  * With `live`, the caller must still be a member and the game must be running.
  */
-async function gameFor(userId: string, gameId: string, opts: { live?: boolean } = {}) {
+async function gameFor(
+  userId: string,
+  gameId: string,
+  currencyCapability: string | undefined,
+  opts: { live?: boolean } = {},
+) {
   const state = await loadGame(gameId);
   if (!state) throw new HTTPException(404, { message: "Spiel nicht gefunden" });
   const me = await memberOf(userId, state.game.groupId);
   const played = !!me && state.seats.some((s) => s.memberId === me.id);
   if (!me || (me.leftAt && !played)) throw new HTTPException(404, { message: "Spiel nicht gefunden" });
+  requireCurrencySupport(state.currency, currencyCapability);
   if (opts.live && me.leftAt) throw new HTTPException(403, { message: "Du hast die Gruppe verlassen" });
   if (opts.live && state.game.status !== "live") throw new HTTPException(409, { message: "Spiel ist abgeschlossen" });
   return state;
@@ -37,7 +43,7 @@ export const gameRoutes = new Hono<AppEnv>()
   .use(requireUser)
 
   .get("/games/:gameId", zValidator("param", gameParam), async (c) => {
-    return c.json(await gameFor(c.var.user.id, c.req.valid("param").gameId));
+    return c.json(await gameFor(c.var.user.id, c.req.valid("param").gameId, c.req.header("X-Buyins-Currency")));
   })
 
   /**
@@ -46,7 +52,7 @@ export const gameRoutes = new Hono<AppEnv>()
    */
   .post("/games/:gameId/hide", zValidator("param", gameParam), async (c) => {
     const { gameId } = c.req.valid("param");
-    const state = await gameFor(c.var.user.id, gameId);
+    const state = await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency"));
     if (state.game.status !== "finished") throw new HTTPException(409, { message: "Laufende Spiele lassen sich nicht entfernen" });
     await db.insert(hiddenGame).values({ userId: c.var.user.id, gameId }).onConflictDoNothing();
     return c.json({ ok: true });
@@ -59,7 +65,7 @@ export const gameRoutes = new Hono<AppEnv>()
     zValidator("json", z.object({ memberId: z.uuid() })),
     async (c) => {
       const { gameId } = c.req.valid("param");
-      const state = await gameFor(c.var.user.id, gameId, { live: true });
+      const state = await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency"), { live: true });
       const { memberId } = c.req.valid("json");
 
       const m = await db.query.member.findFirst({
@@ -74,7 +80,7 @@ export const gameRoutes = new Hono<AppEnv>()
         if (!s) throw new Error("insert failed");
         await tx.insert(buyIn).values({ seatId: s.id, amountCents: state.game.buyInCents, createdBy: c.var.user.id });
       });
-      return c.json(await gameFor(c.var.user.id, gameId));
+      return c.json(await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency")));
     },
   )
 
@@ -82,10 +88,10 @@ export const gameRoutes = new Hono<AppEnv>()
   .post(
     "/games/:gameId/buy-ins",
     zValidator("param", gameParam),
-    zValidator("json", z.object({ seatId: z.uuid(), amountCents: z.number().int().positive().optional() })),
+    zValidator("json", z.object({ seatId: z.uuid(), amountCents: z.number().int().positive().max(maxMinorAmount).optional() })),
     async (c) => {
       const { gameId } = c.req.valid("param");
-      const state = await gameFor(c.var.user.id, gameId, { live: true });
+      const state = await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency"), { live: true });
       const body = c.req.valid("json");
       const s = seatIn(state, body.seatId);
       if (s.cashOutCents !== null) throw new HTTPException(409, { message: "Spieler ist schon ausgecasht" });
@@ -95,7 +101,7 @@ export const gameRoutes = new Hono<AppEnv>()
         amountCents: body.amountCents ?? state.game.buyInCents,
         createdBy: c.var.user.id,
       });
-      return c.json(await gameFor(c.var.user.id, gameId));
+      return c.json(await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency")));
     },
   )
 
@@ -105,10 +111,10 @@ export const gameRoutes = new Hono<AppEnv>()
     zValidator("param", gameParam.extend({ buyInId: z.uuid() })),
     async (c) => {
       const { gameId, buyInId } = c.req.valid("param");
-      const state = await gameFor(c.var.user.id, gameId, { live: true });
+      const state = await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency"), { live: true });
       if (!state.buyIns.some((b) => b.id === buyInId)) throw new HTTPException(404);
       await db.delete(buyIn).where(eq(buyIn.id, buyInId));
-      return c.json(await gameFor(c.var.user.id, gameId));
+      return c.json(await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency")));
     },
   )
 
@@ -116,13 +122,13 @@ export const gameRoutes = new Hono<AppEnv>()
   .put(
     "/games/:gameId/seats/:seatId/cash-out",
     zValidator("param", gameParam.extend({ seatId: z.uuid() })),
-    zValidator("json", z.object({ cashOutCents: z.number().int().nonnegative().nullable() })),
+    zValidator("json", z.object({ cashOutCents: z.number().int().nonnegative().max(maxMinorAmount).nullable() })),
     async (c) => {
       const { gameId, seatId } = c.req.valid("param");
-      const state = await gameFor(c.var.user.id, gameId, { live: true });
+      const state = await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency"), { live: true });
       seatIn(state, seatId);
       await db.update(seat).set({ cashOutCents: c.req.valid("json").cashOutCents }).where(eq(seat.id, seatId));
-      return c.json(await gameFor(c.var.user.id, gameId));
+      return c.json(await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency")));
     },
   )
 
@@ -136,7 +142,7 @@ export const gameRoutes = new Hono<AppEnv>()
     zValidator("json", z.object({ distributeDifference: z.boolean().default(false) })),
     async (c) => {
       const { gameId } = c.req.valid("param");
-      const state = await gameFor(c.var.user.id, gameId, { live: true });
+      const state = await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency"), { live: true });
       if (state.seats.some((s) => s.cashOutCents === null)) {
         throw new HTTPException(409, { message: "Noch nicht alle ausgecasht" });
       }
@@ -157,6 +163,6 @@ export const gameRoutes = new Hono<AppEnv>()
         }
         await tx.update(game).set({ status: "finished", finishedAt: new Date() }).where(eq(game.id, gameId));
       });
-      return c.json(await gameFor(c.var.user.id, gameId));
+      return c.json(await gameFor(c.var.user.id, gameId, c.req.header("X-Buyins-Currency")));
     },
   );

@@ -4,7 +4,7 @@ import { Pressable, View } from "react-native";
 import { BalanceChart } from "@/components/balance-chart";
 import { ChevronIcon } from "@/components/icons";
 import { TopBar } from "@/components/top-bar";
-import { Avatar, Button, Chip, Heading, Hero, Loading, Row, RowGroup, Screen, T, toneOf } from "@/components/ui";
+import { Avatar, Button, Chip, Heading, Hero, Loading, Notice, Row, RowGroup, Screen, T, toneOf } from "@/components/ui";
 import { authClient } from "@/lib/auth";
 import { useSelectedGroup } from "@/lib/group";
 import { useLanguage } from "@/lib/language";
@@ -49,9 +49,12 @@ export default function Overview() {
   }
 
   const data = page.data;
+  if (page.isError) return <Screen dock><TopBar /><Notice>{page.error.message}</Notice></Screen>;
+  if (!data) return <Loading />;
+  const currency = data.group.currency;
   const days = RANGES.find((r) => r.key === range.key)?.days ?? Infinity;
   const cutoff = Math.max(page.dataUpdatedAt, range.selectedAt) - days * DAY;
-  const history = (data?.history ?? []).filter((h) => new Date(h.startedAt).getTime() >= cutoff);
+  const history = data.history.filter((h) => new Date(h.startedAt).getTime() >= cutoff);
   const points: number[] = [];
   let balance = 0;
   for (const game of history) {
@@ -60,7 +63,7 @@ export default function Overview() {
   }
   const last = history.at(-1);
   // Former members stay listed so standings and history still show their names.
-  const people = [...(data?.members ?? []), ...(data?.formerMembers ?? [])];
+  const people = [...data.members, ...data.formerMembers];
   const nameOf = (memberId: string) => people.find((m) => m.id === memberId);
 
   return (
@@ -69,17 +72,17 @@ export default function Overview() {
 
       <Hero>
         <T tone="muted" size={13}>{t.overview.balance}</T>
-        <T size={40} weight="800" tone={toneOf(balance)}>{signedMoney(balance)}</T>
+        <T size={40} weight="800" tone={toneOf(balance)}>{signedMoney(balance, currency)}</T>
         {last ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <ChevronIcon direction={last.netCents >= 0 ? "up" : "down"} size={12} color={last.netCents >= 0 ? c.pos : c.neg} />
-            <T size={13} tone={toneOf(last.netCents)}>{money(Math.abs(last.netCents))}</T>
+            <T size={13} tone={toneOf(last.netCents)}>{money(Math.abs(last.netCents), currency)}</T>
             <T size={13} tone="muted">{t.overview.lastGame}</T>
           </View>
         ) : (
           <T size={13} tone="muted">{t.overview.noGames}</T>
         )}
-        <BalanceChart points={points} />
+        <BalanceChart points={points} currency={currency} />
         <View style={{ flexDirection: "row", gap: 6 }}>
           {RANGES.map((r) => (
             <Chip
@@ -98,13 +101,13 @@ export default function Overview() {
           <RowGroup>
             {[...history].reverse().map((h) => (
               <Link key={h.gameId} href={`/game/${h.gameId}`} asChild>
-                <Pressable accessibilityRole="button" accessibilityLabel={[h.title, date(h.startedAt, locale), t.overview.placeOf(h.rank, h.players), signedMoney(h.netCents)].join(", ")}>
+                <Pressable accessibilityRole="button" accessibilityLabel={[h.title, date(h.startedAt, locale), t.overview.placeOf(h.rank, h.players), signedMoney(h.netCents, currency)].join(", ")}>
                   <Row grouped>
                     <View style={{ flex: 1 }}>
                       <T>{h.title}</T>
                       <T tone="muted" size={12}>{date(h.startedAt, locale)} · {t.overview.placeOf(h.rank, h.players)}</T>
                     </View>
-                    <T weight="700" tone={toneOf(h.netCents)}>{signedMoney(h.netCents)}</T>
+                    <T weight="700" tone={toneOf(h.netCents)}>{signedMoney(h.netCents, currency)}</T>
                   </Row>
                 </Pressable>
               </Link>
@@ -124,14 +127,14 @@ export default function Overview() {
                 <Row
                   grouped
                   key={s.memberId}
-                  label={[name, t.overview.standingLine(s.games, s.wins), signedMoney(s.netCents)].join(", ")}
+                  label={[name, t.overview.standingLine(s.games, s.wins), signedMoney(s.netCents, currency)].join(", ")}
                 >
                   <Avatar id={s.memberId} name={name} guest={!m?.userId} />
                   <View style={{ flex: 1 }}>
                     <T>{name}</T>
                     <T tone="muted" size={12}>{t.overview.standingLine(s.games, s.wins)}</T>
                   </View>
-                  <T weight="700" tone={toneOf(s.netCents)}>{signedMoney(s.netCents)}</T>
+                  <T weight="700" tone={toneOf(s.netCents)}>{signedMoney(s.netCents, currency)}</T>
                 </Row>
               );
             })}

@@ -23,7 +23,7 @@ The Buy-Ins ist ein Zählblock für private Spielrunden unter Freunden. Die App 
 Die App führt nur Buch. Sie bewegt kein Geld, bietet keine Wetten oder Glücksspiele an, hat keine Quoten und keine Zahlungslinks. Der einzige Kauf ist optional: einmalig „Werbefrei“, das die Werbung beim Spielstart entfernt. Abgerechnet wird unter den Mitspielern, bar oder wie ihr wollt. Stell dir einen Notizblock vor, der für dich rechnet.
 
 SO LÄUFT EIN SPIEL
-- Lege eine Gruppe für deine feste Runde an und setze einen Standard-Buy-in in Euro.
+- Lege eine Gruppe für deine feste Runde an und wähle eine Währung und setze einen Standard-Buy-in.
 - Starte ein Spiel und wähle, wer mitspielt.
 - Alle sind mit dem Standard-Buy-in dabei. Mit einem Tipp trägst du einen Rebuy ein, wenn jemand nachlegt. Falsch eingetragen? Aus der Liste wieder entfernen.
 - Scheidet jemand aus, trägst du seinen Cash-out ein. Pot und alle Stacks hast du immer im Blick.
@@ -43,7 +43,7 @@ VERLAUF UND AUSWERTUNG
 
 GUT ZU WISSEN
 - Registrierung mit E-Mail und Passwort. Dein Name ist das, was die Gruppe sieht.
-- Beträge werden in Euro geführt.
+- Jede Gruppe rechnet in ihrer eigenen Währung ab.
 - Deinen Account kannst du jederzeit in der App löschen.
 - Dunkles Design, gemacht für den Einsatz am Tisch.
 

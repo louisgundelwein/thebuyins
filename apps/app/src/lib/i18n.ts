@@ -96,7 +96,8 @@ const de = {
   },
   settle: {
     title: "Abrechnen",
-    hint: "Chips pro Spieler in € eintragen.",
+    hint: (currency: string) => `Chipwert pro Spieler in ${currency} eintragen.`,
+    invalidAmount: (currency: string) => `Gib einen gültigen Betrag in ${currency} ein.`,
     paidIn: (name: string, amount: string) => `${name} · rein ${amount}`,
     tap: "tippen…",
     difference: (counted: string, pot: string, diff: string) =>
@@ -112,7 +113,7 @@ const de = {
     defaultTitle: (weekday: string) => `${weekday}abend`,
     whoPlays: "Wer spielt?",
     title: "Titel",
-    buyIn: "Buy-in €",
+    buyIn: (currency: string) => `Buy-in (${currency})`,
     seats: "Sitzplätze",
     redraw: "Neu auslosen",
     start: "Spiel starten",
@@ -149,11 +150,19 @@ const de = {
     removeConfirm: "Entfernen?",
     removeLabel: (title: string) => `${title} aus meinem Verlauf entfernen`,
   },
+  currency: {
+    title: "Währung",
+    defaultTitle: "Standardwährung",
+    defaultHint: "Für neue Gruppen",
+    saveError: "Währung konnte nicht gespeichert werden.",
+    loadError: "Standardwährung konnte nicht geladen werden.",
+    retry: "Erneut versuchen",
+  },
   group: {
     title: "Neue Gruppe",
     name: "Name",
     namePlaceholder: "Freitagsrunde",
-    defaultBuyIn: "Standard Buy-in in €",
+    defaultBuyIn: (currency: string) => `Standard-Buy-in (${currency})`,
     create: "Gruppe erstellen",
   },
   join: {
@@ -321,7 +330,8 @@ const en: Dict = {
   },
   settle: {
     title: "Settle up",
-    hint: "Enter each player's chips in €.",
+    hint: (currency: string) => `Enter each player’s chip value in ${currency}.`,
+    invalidAmount: (currency: string) => `Enter a valid amount in ${currency}.`,
     paidIn: (name: string, amount: string) => `${name} · paid in ${amount}`,
     tap: "tap…",
     difference: (counted: string, pot: string, diff: string) =>
@@ -337,7 +347,7 @@ const en: Dict = {
     defaultTitle: (weekday: string) => `${weekday} game night`,
     whoPlays: "Who's playing?",
     title: "Title",
-    buyIn: "Buy-in €",
+    buyIn: (currency: string) => `Buy-in (${currency})`,
     seats: "Seats",
     redraw: "Draw again",
     start: "Start game",
@@ -374,11 +384,19 @@ const en: Dict = {
     removeConfirm: "Remove?",
     removeLabel: (title: string) => `Remove ${title} from my history`,
   },
+  currency: {
+    title: "Currency",
+    defaultTitle: "Default currency",
+    defaultHint: "For new groups",
+    saveError: "Could not save currency.",
+    loadError: "Could not load default currency.",
+    retry: "Try again",
+  },
   group: {
     title: "New group",
     name: "Name",
     namePlaceholder: "Friday poker",
-    defaultBuyIn: "Default buy-in in €",
+    defaultBuyIn: (currency: string) => `Default buy-in (${currency})`,
     create: "Create group",
   },
   join: {

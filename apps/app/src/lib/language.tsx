@@ -1,3 +1,4 @@
+import type { Currency } from "@thebuyins/core";
 import * as SecureStore from "expo-secure-store";
 import { createContext, use, useEffect, useState, type ReactNode } from "react";
 import { Platform } from "react-native";
@@ -13,8 +14,8 @@ type LanguageState = {
   t: Dict;
   /** BCP 47 tag for Intl and toLocale* formatting. */
   locale: string;
-  money: (cents: number) => string;
-  signedMoney: (cents: number) => string;
+  money: (cents: number, currency: Currency) => string;
+  signedMoney: (cents: number, currency: Currency) => string;
 };
 
 const LanguageContext = createContext<LanguageState | null>(null);
@@ -59,8 +60,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     language,
     t: dictionaries[language],
     locale,
-    money: (cents: number) => formatMoney(cents, locale),
-    signedMoney: (cents: number) => formatSignedMoney(cents, locale),
+    money: (cents: number, currency: Currency) => formatMoney(cents, locale, currency),
+    signedMoney: (cents: number, currency: Currency) => formatSignedMoney(cents, locale, currency),
   };
   return <LanguageContext value={value}>{children}</LanguageContext>;
 }
@@ -70,4 +71,13 @@ export function useLanguage() {
   const ctx = use(LanguageContext);
   if (!ctx) throw new Error("useLanguage outside LanguageProvider");
   return ctx;
+}
+
+/** Binds monetary formatting to one game or group currency. */
+export function useMoney(currency: Currency) {
+  const { money, signedMoney } = useLanguage();
+  return {
+    money: (cents: number) => money(cents, currency),
+    signedMoney: (cents: number) => signedMoney(cents, currency),
+  };
 }

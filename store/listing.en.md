@@ -23,7 +23,7 @@ The Buy-Ins is a ledger for private home games among friends. It keeps track of 
 The app only keeps records. It does not move money, it does not offer betting or gambling of any kind, there are no odds and no payment links. The only purchase is optional: a one-time "Ad-free" that removes the ad at round start. Players settle up among themselves, in cash or however they like. Think of it as a notepad that does the maths.
 
 HOW A GAME WORKS
-- Create a group for your regular round and set a default buy-in in euros.
+- Create a group for your regular round choose a currency and set a default buy-in.
 - Start a game and pick who is playing.
 - Everyone is in for the default buy-in. Tap to add a rebuy whenever someone reloads. Added one by mistake? Remove it from the list.
 - When a player is out, record their cash-out. The pot and every stack are always visible.
@@ -43,7 +43,7 @@ HISTORY AND STATS
 
 GOOD TO KNOW
 - Sign up with email and password. Your name is what the group sees.
-- Amounts are in euros.
+- Each group settles in its own currency.
 - You can delete your account at any time in the app.
 - Dark design, built for use at the table.
 

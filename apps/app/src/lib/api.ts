@@ -9,8 +9,9 @@ import { API_URL, authClient } from "./auth";
  */
 export const api = hc<Api>(`${API_URL}/api`, {
   fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
-    if (Platform.OS === "web") return fetch(input, { ...init, credentials: "include" });
     const headers = new Headers(init?.headers);
+    headers.set("X-Buyins-Currency", "1");
+    if (Platform.OS === "web") return fetch(input, { ...init, headers, credentials: "include" });
     headers.set("Cookie", await authClient.getCookie());
     return fetch(input, { ...init, headers, credentials: "omit" });
   },

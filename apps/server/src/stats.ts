@@ -1,11 +1,15 @@
 import { settle, summarize, type Entry } from "@thebuyins/core";
-import { and, eq, inArray, isNotNull, notExists } from "drizzle-orm";
+import { and, eq, getTableColumns, inArray, isNotNull, notExists } from "drizzle-orm";
 import { db } from "./db";
 import { buyIn, game, group, hiddenGame, member, seat } from "./db/schema/poker";
 
 /** Builds the full table state of one game: seats, buy-in log, totals and suggested transfers. */
 export async function loadGame(gameId: string) {
-  const g = await db.query.game.findFirst({ where: eq(game.id, gameId) });
+  const [g] = await db
+    .select({ ...getTableColumns(game), currency: group.currency })
+    .from(game)
+    .innerJoin(group, eq(group.id, game.groupId))
+    .where(eq(game.id, gameId));
   if (!g) return null;
 
   const seats = await db
@@ -34,7 +38,8 @@ export async function loadGame(gameId: string) {
   const allCashedOut = seats.length > 0 && seats.every((s) => s.cashOutCents !== null);
   const transfers = allCashedOut && summary.differenceCents === 0 ? settle(summary.players) : [];
 
-  return { game: g, seats, buyIns, summary, transfers };
+  const { currency, ...gameRow } = g;
+  return { game: gameRow, currency, seats, buyIns, summary, transfers };
 }
 
 /**
@@ -96,13 +101,13 @@ export function historyOf(results: Results, memberId: string) {
 /** The viewer's own games from groups they left, newest first. Their books stay intact there. */
 export async function archiveOf(userId: string) {
   const left = await db
-    .select({ memberId: member.id, groupId: member.groupId, groupName: group.name })
+    .select({ memberId: member.id, groupId: member.groupId, groupName: group.name, currency: group.currency })
     .from(member)
     .innerJoin(group, eq(group.id, member.groupId))
     .where(and(eq(member.userId, userId), isNotNull(member.leftAt)));
   const rows = await Promise.all(
     left.map(async (m) =>
-      historyOf(await finishedResults(m.groupId, userId), m.memberId).map((h) => ({ ...h, groupName: m.groupName })),
+      historyOf(await finishedResults(m.groupId, userId), m.memberId).map((h) => ({ ...h, groupName: m.groupName, currency: m.currency })),
     ),
   );
   return rows.flat().sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());

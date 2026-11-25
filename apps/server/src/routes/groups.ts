@@ -1,3 +1,4 @@
+import { currencies, maxMinorAmount } from "@thebuyins/core";
 import { zValidator } from "@hono/zod-validator";
 import { and, desc, eq, exists, getTableColumns, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
@@ -5,10 +6,10 @@ import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { db } from "../db";
 import { buyIn, game, group, member, seat } from "../db/schema/poker";
-import { adminOf, memberOf, membershipOf, requireUser, type AppEnv } from "../middleware";
+import { adminOf, memberOf, membershipOf, requireCurrencySupport, requireUser, supportsCurrency, type AppEnv } from "../middleware";
 import { archiveOf, finishedResults, historyOf, leaderboard } from "../stats";
 
-const cents = z.number().int().positive();
+const cents = z.number().int().positive().max(maxMinorAmount);
 
 // No 0/O/1/I so codes survive being read out loud at the table.
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -45,19 +46,27 @@ export const groupRoutes = new Hono<AppEnv>()
   /** Groups the caller belongs to. */
   .get("/groups", async (c) => {
     const rows = await db
-      .select({ id: group.id, name: group.name, role: member.role })
+      .select({ id: group.id, name: group.name, currency: group.currency, role: member.role })
       .from(member)
       .innerJoin(group, eq(group.id, member.groupId))
       .where(and(eq(member.userId, c.var.user.id), isNull(member.leftAt)))
       .orderBy(group.createdAt);
-    return c.json(rows);
+    return c.json(supportsCurrency(c.req.header("X-Buyins-Currency")) ? rows : rows.filter((g) => g.currency === "EUR"));
   })
 
   .post(
     "/groups",
-    zValidator("json", z.object({ name: z.string().trim().min(1).max(60), defaultBuyInCents: cents })),
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().trim().min(1).max(60),
+        defaultBuyInCents: cents,
+        currency: z.enum(currencies).default("EUR"),
+      }),
+    ),
     async (c) => {
       const body = c.req.valid("json");
+      requireCurrencySupport(body.currency, c.req.header("X-Buyins-Currency"));
       const created = await db.transaction(async (tx) => {
         const [g] = await tx.insert(group).values({ ...body, inviteCode: newInviteCode() }).returning();
         if (!g) throw new Error("insert failed");
@@ -77,7 +86,7 @@ export const groupRoutes = new Hono<AppEnv>()
     zValidator("query", z.object({ season: z.union([z.literal("all"), z.coerce.number().int()]).default("all") })),
     async (c) => {
       const { groupId } = c.req.param();
-      const me = await membershipOf(c.var.user.id, groupId);
+      const me = await membershipOf(c.var.user.id, groupId, c.req.header("X-Buyins-Currency"));
       const { season } = c.req.valid("query");
 
       const [g, allMembers, games, results] = await Promise.all([
@@ -107,7 +116,7 @@ export const groupRoutes = new Hono<AppEnv>()
     zValidator("json", z.object({ displayName: z.string().trim().min(1).max(40) })),
     async (c) => {
       const { groupId } = c.req.param();
-      await membershipOf(c.var.user.id, groupId);
+      await membershipOf(c.var.user.id, groupId, c.req.header("X-Buyins-Currency"));
       const [m] = await db.insert(member).values({ groupId, displayName: c.req.valid("json").displayName }).returning();
       return c.json(m, 201);
     },
@@ -123,7 +132,7 @@ export const groupRoutes = new Hono<AppEnv>()
     zValidator("param", z.object({ groupId: z.uuid(), memberId: z.uuid() })),
     async (c) => {
       const { groupId, memberId } = c.req.valid("param");
-      const me = await adminOf(c.var.user.id, groupId);
+      const me = await adminOf(c.var.user.id, groupId, c.req.header("X-Buyins-Currency"));
       if (me.id === memberId) throw new HTTPException(409, { message: "Du kannst dich nicht selbst entfernen" });
 
       const target = await db.query.member.findFirst({
@@ -144,22 +153,26 @@ export const groupRoutes = new Hono<AppEnv>()
 
   /** Leaves the group. Your games stay for everyone else and move to your archive. */
   .post("/groups/:groupId/leave", async (c) => {
-    const me = await membershipOf(c.var.user.id, c.req.param("groupId"));
+    const me = await membershipOf(c.var.user.id, c.req.param("groupId"), c.req.header("X-Buyins-Currency"));
     await db.transaction((tx) => leaveGroup(tx, me));
     return c.json({ ok: true });
   })
 
   /** Games of groups you left that you played in, newest first. */
-  .get("/archive", async (c) => c.json(await archiveOf(c.var.user.id)))
+  .get("/archive", async (c) => {
+    const rows = await archiveOf(c.var.user.id);
+    return c.json(supportsCurrency(c.req.header("X-Buyins-Currency")) ? rows : rows.filter((g) => g.currency === "EUR"));
+  })
 
   /** Invite preview: group name and guests the caller could claim as themselves. */
   .get("/invites/:code", async (c) => {
     const g = await groupByCode(c.req.param("code"));
+    requireCurrencySupport(g.currency, c.req.header("X-Buyins-Currency"));
     const guests = await db
       .select({ id: member.id, displayName: member.displayName })
       .from(member)
       .where(and(eq(member.groupId, g.id), isNull(member.userId), isNull(member.leftAt)));
-    return c.json({ group: { id: g.id, name: g.name }, guests });
+    return c.json({ group: { id: g.id, name: g.name, currency: g.currency }, guests });
   })
 
   /** Joins a group, optionally taking over an existing guest so their history carries over. */
@@ -168,6 +181,7 @@ export const groupRoutes = new Hono<AppEnv>()
     zValidator("json", z.object({ claimMemberId: z.uuid().optional() })),
     async (c) => {
       const g = await groupByCode(c.req.param("code"));
+      requireCurrencySupport(g.currency, c.req.header("X-Buyins-Currency"));
       const { claimMemberId } = c.req.valid("json");
       const user = c.var.user;
 
@@ -201,7 +215,7 @@ export const groupRoutes = new Hono<AppEnv>()
     ),
     async (c) => {
       const { groupId } = c.req.param();
-      await membershipOf(c.var.user.id, groupId);
+      await membershipOf(c.var.user.id, groupId, c.req.header("X-Buyins-Currency"));
       const { title, buyInCents, memberIds } = c.req.valid("json");
       const valid = await db
         .select({ id: member.id })

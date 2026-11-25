@@ -1,3 +1,4 @@
+import type { Currency } from "@thebuyins/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { parseResponse } from "hono/client";
@@ -7,8 +8,8 @@ import { CloseIcon } from "@/components/icons";
 import { Avatar, Button, Chip, Field, Heading, Hero, Loading, Notice, PAGE_TOP, Row, Screen, T, Tile, toneOf } from "@/components/ui";
 import { api, type GameState } from "@/lib/api";
 import { authClient } from "@/lib/auth";
-import { useLanguage } from "@/lib/language";
-import { parseCents } from "@/lib/money";
+import { useLanguage, useMoney } from "@/lib/language";
+import { majorAmountText, parseCents } from "@/lib/money";
 import { keys, useGame, useGameMutation, useGroup } from "@/lib/queries";
 import { useTheme } from "@/lib/appearance";
 
@@ -40,7 +41,8 @@ function useTotals(state: GameState) {
 }
 
 function Table({ state, frame, onSettle }: { state: GameState; frame: Frame; onSettle: () => void }) {
-  const { t, locale, money } = useLanguage();
+  const { t, locale } = useLanguage();
+  const { money } = useMoney(state.currency);
   const { c } = useTheme();
   const { game, seats, summary } = state;
   const { bySeat } = useTotals(state);
@@ -167,7 +169,8 @@ function HideGame({ state }: { state: GameState }) {
 }
 
 function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBack: () => void }) {
-  const { t, money } = useLanguage();
+  const { t } = useLanguage();
+  const { money } = useMoney(state.currency);
   const { game, seats, summary, transfers } = state;
   const { bySeat, nameOf } = useTotals(state);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -183,13 +186,19 @@ function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBa
     (state) => router.push(`/game/${state.game.id}`),
   );
 
-  const allIn = seats.every((s) => s.cashOutCents !== null);
+  const invalidDraft = (seatId: string) => {
+    const raw = drafts[seatId];
+    return raw !== undefined && raw.trim() !== "" && parseCents(raw, state.currency) === null;
+  };
+  const allIn = seats.every((s) => s.cashOutCents !== null && !invalidDraft(s.id) &&
+    (drafts[s.id] === undefined || parseCents(drafts[s.id], state.currency) === s.cashOutCents));
   const diff = summary.differenceCents;
 
   function commit(seatId: string) {
     const raw = drafts[seatId];
     if (raw === undefined) return;
-    cashOut.mutate({ seatId, cashOutCents: raw.trim() === "" ? null : parseCents(raw) });
+    if (invalidDraft(seatId)) return;
+    cashOut.mutate({ seatId, cashOutCents: raw.trim() === "" ? null : parseCents(raw, state.currency) });
   }
 
   return (
@@ -199,14 +208,14 @@ function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBa
         <View style={{ flexDirection: "row", gap: 10 }}>
           <View style={{ flex: 1 }}><Button title={t.settle.back} variant="ghost" onPress={onBack} /></View>
           <View style={{ flex: 2 }}>
-            <Button title={diff === 0 ? t.settle.finish : t.settle.splitAndFinish} disabled={!allIn} loading={finish.isPending} onPress={() => finish.mutate(diff !== 0)} />
+            <Button title={diff === 0 ? t.settle.finish : t.settle.splitAndFinish} disabled={!allIn || cashOut.isPending} loading={finish.isPending} onPress={() => finish.mutate(diff !== 0)} />
           </View>
         </View>
       }
     >
       {frame.header}
       <T size={28} weight="800" style={{ marginTop: topGap(frame) }}>{t.settle.title}</T>
-      <T tone="muted">{t.settle.hint}</T>
+      <T tone="muted">{t.settle.hint(state.currency)}</T>
 
       {allIn && diff !== 0 && (
         <Notice>{t.settle.difference(money(summary.cashedOutCents), money(summary.potCents), money(Math.abs(diff)))}</Notice>
@@ -217,13 +226,14 @@ function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBa
           <View key={s.id} style={{ width: "48%", flexGrow: 1 }}>
             <Field
               label={t.settle.paidIn(s.name, money(bySeat(s.id).reduce((sum, b) => sum + b.amountCents, 0)))}
-              value={drafts[s.id] ?? (s.cashOutCents === null ? "" : String(s.cashOutCents / 100))}
+              value={drafts[s.id] ?? (s.cashOutCents === null ? "" : majorAmountText(s.cashOutCents, state.currency))}
               onChangeText={(t) => setDrafts((d) => ({ ...d, [s.id]: t }))}
               onBlur={() => commit(s.id)}
               onSubmitEditing={() => commit(s.id)}
-              keyboardType="decimal-pad"
+              keyboardType={state.currency === "JPY" ? "number-pad" : "decimal-pad"}
               placeholder={t.settle.tap}
             />
+            {invalidDraft(s.id) && <Notice>{t.settle.invalidAmount(state.currency)}</Notice>}
           </View>
         ))}
       </View>
@@ -231,7 +241,7 @@ function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBa
       {transfers.length > 0 && (
         <>
           <Heading title={t.settle.whoPaysWhom} right={<T tone="muted">{transfers.length}</T>} />
-          {transfers.map((tr) => <Transfer key={`${tr.from}-${tr.to}`} from={tr.from} to={tr.to} cents={tr.amountCents} nameOf={nameOf} />)}
+          {transfers.map((tr) => <Transfer currency={state.currency} key={`${tr.from}-${tr.to}`} from={tr.from} to={tr.to} cents={tr.amountCents} nameOf={nameOf} />)}
         </>
       )}
       {cashOut.isError && <Notice>{cashOut.error.message}</Notice>}
@@ -241,7 +251,8 @@ function Settle({ state, frame, onBack }: { state: GameState; frame: Frame; onBa
 }
 
 function Result({ state, frame }: { state: GameState; frame: Frame }) {
-  const { t, money, signedMoney } = useLanguage();
+  const { t } = useLanguage();
+  const { money, signedMoney } = useMoney(state.currency);
   const { game, summary, transfers } = state;
   const { nameOf } = useTotals(state);
   const winner = summary.players[0];
@@ -287,7 +298,7 @@ function Result({ state, frame }: { state: GameState; frame: Frame }) {
       {transfers.length > 0 && (
         <>
           <Heading title={t.settle.whoPaysWhom} right={<T tone="muted">{transfers.length}</T>} />
-          {transfers.map((tr) => <Transfer key={`${tr.from}-${tr.to}`} from={tr.from} to={tr.to} cents={tr.amountCents} nameOf={nameOf} />)}
+          {transfers.map((tr) => <Transfer currency={state.currency} key={`${tr.from}-${tr.to}`} from={tr.from} to={tr.to} cents={tr.amountCents} nameOf={nameOf} />)}
         </>
       )}
       <HideGame state={state} />
@@ -295,8 +306,9 @@ function Result({ state, frame }: { state: GameState; frame: Frame }) {
   );
 }
 
-function Transfer({ from, to, cents, nameOf }: { from: string; to: string; cents: number; nameOf: (id: string) => string }) {
-  const { t, money } = useLanguage();
+function Transfer({ from, to, cents, nameOf, currency }: { currency: Currency; from: string; to: string; cents: number; nameOf: (id: string) => string }) {
+  const { t } = useLanguage();
+  const { money } = useMoney(currency);
   const { c } = useTheme();
   return (
     <Row label={t.settle.transferRow(nameOf(from), nameOf(to), money(cents))}>

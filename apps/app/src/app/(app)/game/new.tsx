@@ -9,7 +9,7 @@ import { api } from "@/lib/api";
 import { useSessionAd } from "@/lib/session-ad";
 import { shareInvite } from "@/lib/invite";
 import { useLanguage } from "@/lib/language";
-import { parseCents } from "@/lib/money";
+import { majorAmountText, parseCents } from "@/lib/money";
 import { useGroup } from "@/lib/queries";
 import { type Colors } from "@/lib/theme";
 import { useTheme } from "@/lib/appearance";
@@ -71,7 +71,7 @@ export default function NewGame() {
 
   if (!page.data) return <Loading />;
   const { group, me, members } = page.data;
-  const cents = parseCents(buyIn ?? String(group.defaultBuyInCents / 100));
+  const cents = parseCents(buyIn ?? majorAmountText(group.defaultBuyInCents, group.currency), group.currency);
   const byName = (a: { displayName: string }, b: { displayName: string }) => a.displayName.localeCompare(b.displayName, locale);
   const sorted = [
     ...members.filter((m) => m.id === me.id),
@@ -143,7 +143,7 @@ export default function NewGame() {
     >
       <View style={s.top}>
         <T size={22} weight="800">{t.newGame.whoPlays}</T>
-        <T tone="muted">{selected.size} · {cents ? money(selected.size * cents) : "?"}</T>
+        <T tone="muted">{selected.size} · {cents ? money(selected.size * cents, group.currency) : "?"}</T>
       </View>
       <View style={s.fields}>
         <View style={{ flex: 2 }}>
@@ -151,10 +151,10 @@ export default function NewGame() {
         </View>
         <View style={{ flex: 1 }}>
           <Field
-            value={buyIn ?? String(group.defaultBuyInCents / 100)}
+            value={buyIn ?? majorAmountText(group.defaultBuyInCents, group.currency)}
             onChangeText={setBuyIn}
-            keyboardType="decimal-pad"
-            placeholder={t.newGame.buyIn}
+            keyboardType={group.currency === "JPY" ? "number-pad" : "decimal-pad"}
+            placeholder={t.newGame.buyIn(group.currency)}
           />
         </View>
       </View>

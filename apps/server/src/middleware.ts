@@ -3,7 +3,7 @@ import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
 import { auth } from "./auth";
 import { db } from "./db";
-import { member } from "./db/schema/poker";
+import { group, member } from "./db/schema/poker";
 
 type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
 export type AppEnv = { Variables: { user: Session["user"] } };
@@ -22,15 +22,30 @@ export async function memberOf(userId: string, groupId: string) {
 }
 
 /** Returns the caller's active membership, or throws 404 so non-members and former members can't probe ids. */
-export async function membershipOf(userId: string, groupId: string) {
+export async function membershipOf(userId: string, groupId: string, currencyCapability?: string) {
   const row = await memberOf(userId, groupId);
   if (!row || row.leftAt) throw new HTTPException(404, { message: "Gruppe nicht gefunden" });
+  const g = await db.query.group.findFirst({ where: eq(group.id, groupId) });
+  if (!g) throw new HTTPException(404, { message: "Gruppe nicht gefunden" });
+  requireCurrencySupport(g.currency, currencyCapability);
   return row;
 }
 
 /** Like `membershipOf`, but only group admins pass; other members get 403. */
-export async function adminOf(userId: string, groupId: string) {
-  const me = await membershipOf(userId, groupId);
+export async function adminOf(userId: string, groupId: string, currencyCapability?: string) {
+  const me = await membershipOf(userId, groupId, currencyCapability);
   if (me.role !== "admin") throw new HTTPException(403, { message: "Nur Admins dürfen das" });
   return me;
+}
+
+/** Version 1 clients render amounts in the group's currency; legacy clients only understand EUR. */
+export function supportsCurrency(currencyCapability?: string) {
+  return currencyCapability === "1";
+}
+
+/** Prevents legacy clients from displaying or changing amounts as euros in another currency. */
+export function requireCurrencySupport(currency: typeof group.$inferSelect.currency, currencyCapability?: string) {
+  if (currency !== "EUR" && !supportsCurrency(currencyCapability)) {
+    throw new HTTPException(409, { message: "Bitte aktualisiere die App, um diese Währung zu verwenden" });
+  }
 }
