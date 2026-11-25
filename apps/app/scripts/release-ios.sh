@@ -12,7 +12,7 @@ AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKey
 OUT=build/ios
 [[ -f "$KEY" ]] || { echo "missing $KEY" >&2; exit 1; }
 
-CI=1 npx expo prebuild --clean -p ios
+BUYINS_RELEASE=1 CI=1 npx expo prebuild --clean -p ios
 rm -rf "$OUT" && mkdir -p "$OUT"
 
 xcodebuild archive -workspace ios/TheBuyIns.xcworkspace -scheme TheBuyIns -configuration Release \

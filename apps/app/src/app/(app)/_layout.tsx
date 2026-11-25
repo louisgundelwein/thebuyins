@@ -2,11 +2,13 @@ import { Stack, router } from "expo-router";
 import { View } from "react-native";
 import { CloseButton } from "@/components/ui";
 import { GroupProvider } from "@/lib/group";
+import { useAdConsent } from "@/lib/session-ad";
 import { stackHeader } from "@/lib/theme";
 import { useTheme } from "@/lib/appearance";
 
 export default function AppLayout() {
   const { c } = useTheme();
+  useAdConsent();
   return (
     <GroupProvider>
       <Stack screenOptions={stackHeader(c)}>

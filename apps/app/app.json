@@ -74,6 +74,9 @@
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
+    "locales": {
+      "de": "./locales/de.json"
+    },
     "plugins": [
       "expo-router",
       [

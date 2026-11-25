@@ -27,6 +27,10 @@ pnpm --filter @thebuyins/app android        # nativer Build + Installation
 adb reverse tcp:3000 tcp:3000              # API im Emulator unter localhost
 ```
 
-### Session-start test ads
+### Ads
 
-Set `BUYINS_TEST_ADS=1` during native prebuild, build, and when starting Metro for that build. Rebuild the native app after changing this setting. The final Start button after the seat draw can show one preloaded Google sample ad. If consent is missing or the ad is unavailable, the usual start request proceeds immediately. Expo Go and web skip ads.
+Native builds show one Google AdMob interstitial when the host taps Start after the seat draw. If ads may not be requested or none is loaded, the round starts immediately. Expo Go and web skip ads.
+
+- Consent: signed-in users get Google's consent dialog (and Apple's tracking prompt, if the IDFA message is published in AdMob, Privacy & messaging) at app start. Account shows "Ad privacy settings" where Google requires it.
+- IDs: the AdMob app and interstitial unit IDs are constants at the top of `apps/app/app.config.js`. The release scripts set `BUYINS_RELEASE=1`, which writes the real IDs and fails while a `*_TODO` placeholder is left. Other builds use Google's sample app IDs, and `__DEV__` bundles always use test ad units.
+- `https://thebuyins.com/app-ads.txt` is served by `apps/server/src/well-known.ts`.

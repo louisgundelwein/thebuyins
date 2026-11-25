@@ -4,6 +4,7 @@ import { Button, Field, Heading, Notice, PAGE_TOP, Row, Screen, T } from "@/comp
 import { authErrorMessage } from "@/components/auth-form";
 import { authClient } from "@/lib/auth";
 import { useLanguage } from "@/lib/language";
+import { useAdPrivacyOptions } from "@/lib/session-ad";
 
 /** Account details and self-service deletion (required by App Store and Google Play). */
 export default function Account() {
@@ -13,6 +14,7 @@ export default function Account() {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const adPrivacyOptions = useAdPrivacyOptions();
 
   async function remove() {
     setBusy(true);
@@ -30,6 +32,7 @@ export default function Account() {
         <T tone="muted" size={13}>{session?.user.email}</T>
       </Row>
       <Button title={t.account.privacy} variant="ghost" onPress={() => router.push("/privacy")} />
+      {adPrivacyOptions && <Button title={t.account.adPrivacy} variant="ghost" onPress={() => void adPrivacyOptions()} />}
       <Button title={t.account.support} variant="ghost" onPress={() => router.push("/support")} />
 
       <Heading title={t.account.delete} />

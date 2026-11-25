@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 source "${ANDROID_SIGNING_ENV:-$HOME/.thebuyins/android-upload.env}"
-CI=1 npx expo prebuild --clean -p android
+BUYINS_RELEASE=1 CI=1 npx expo prebuild --clean -p android
 
 # AGP's injected signing props override the template's debug signingConfig without editing generated gradle files.
 # ponytail: ARM only; x86 builds only serve emulators/ChromeOS and push the AAB past 50 MB. Drop the flag if Play asks for x86_64.

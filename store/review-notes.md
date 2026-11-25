@@ -52,4 +52,4 @@ Account deletion is in the app: tap the avatar at the top right, then "Account",
 
 ## Other
 - Sign-in is email and password only. No third-party login.
-- No ads, no third-party analytics, no tracking.
+- Ads: Google AdMob. At app start, Google's consent dialog and Apple's tracking prompt appear (where required). When the host taps Start after the seat draw, one interstitial ad is shown before the round begins. No third-party analytics.

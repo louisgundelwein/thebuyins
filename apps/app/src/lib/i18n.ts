@@ -190,6 +190,7 @@ const de = {
   account: {
     title: "Account",
     privacy: "Datenschutz",
+    adPrivacy: "Datenschutzeinstellungen für Werbung",
     support: "Support",
     delete: "Account löschen",
     deleteText:
@@ -208,8 +209,9 @@ const de = {
     imprint: "Impressum",
     privacy: [
       { heading: "Welche Daten wir speichern", body: "Für deinen Account: Name, E-Mail-Adresse und ein verschlüsseltes Passwort. Für die Nutzung: Gruppen, Spiele, Buy-ins und Ergebnisse, die du oder deine Mitspieler eintragen. Zur Sicherheit der Anmeldung speichern wir Sitzungsdaten wie IP-Adresse und Gerätetyp." },
-      { heading: "Wofür", body: "Ausschließlich, um die App bereitzustellen: Anmeldung, Spiele erfassen und Abrechnungen innerhalb deiner Gruppen anzeigen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO." },
-      { heading: "Was wir nicht tun", body: "Keine Werbung, kein Tracking, keine Analyse-Tools, kein Verkauf von Daten. Die App wickelt keine Zahlungen ab." },
+      { heading: "Wofür", body: "Um die App bereitzustellen: Anmeldung, Spiele erfassen und Abrechnungen innerhalb deiner Gruppen anzeigen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO." },
+      { heading: "Werbung", body: "Die iOS- und Android-App zeigt beim Start einer Runde eine Anzeige von Google AdMob (Google Ireland Limited). Dafür verarbeitet Google die Werbe-ID deines Geräts (IDFA bzw. Android-Werbe-ID), Geräte- und Nutzungsdaten wie Interaktionen mit Anzeigen und deinen ungefähren Standort anhand der IP-Adresse, um Anzeigen auszuliefern und zu messen und Betrug zu verhindern. Personalisierte Werbung gibt es nur mit deiner Einwilligung über Googles Einwilligungsdialog und auf dem iPhone über Apples Tracking-Abfrage (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Ohne Einwilligung siehst du nur nicht personalisierte oder eingeschränkte Werbung. Google kann Daten auch in Länder außerhalb der EU übermitteln, etwa in die USA. Du kannst deine Einwilligung jederzeit widerrufen: in der App unter Profil, Account, Datenschutzeinstellungen für Werbung (erscheint, wo eine Einwilligung nötig ist), auf dem iPhone unter Einstellungen, Datenschutz & Sicherheit, Tracking, auf Android in den Werbeeinstellungen des Geräts. Googles Datenschutzerklärung: https://policies.google.com/privacy" },
+      { heading: "Was wir nicht tun", body: "Keine eigenen Analyse-Tools, kein Verkauf von Daten. Die App wickelt keine Zahlungen ab." },
       { heading: "Wer die Daten sieht", body: "Mitglieder deiner Gruppen sehen deinen Namen und deine Spielergebnisse. Die Daten liegen auf Servern in der EU." },
       { heading: "Deine Rechte", body: "Du kannst deinen Account jederzeit in der App unter Profil, Account, Account löschen. Für Auskunft, Berichtigung oder Löschung erreichst du uns unter der oben genannten E-Mail-Adresse. Du hast außerdem ein Beschwerderecht bei einer Datenschutzaufsichtsbehörde." },
     ],
@@ -404,6 +406,7 @@ const en: Dict = {
   account: {
     title: "Account",
     privacy: "Privacy",
+    adPrivacy: "Ad privacy settings",
     support: "Support",
     delete: "Delete account",
     deleteText:
@@ -422,8 +425,9 @@ const en: Dict = {
     imprint: "Imprint",
     privacy: [
       { heading: "What data we store", body: "For your account: name, email address and an encrypted password. For using the app: groups, games, buy-ins and results that you or your fellow players enter. For the security of sign-in we store session data such as IP address and device type." },
-      { heading: "Why", body: "Solely to provide the app: sign-in, recording games and showing settlements within your groups. The legal basis is Art. 6 (1) (b) GDPR." },
-      { heading: "What we do not do", body: "No advertising, no tracking, no analytics tools, no selling of data. The app does not process payments." },
+      { heading: "Why", body: "To provide the app: sign-in, recording games and showing settlements within your groups. The legal basis is Art. 6 (1) (b) GDPR." },
+      { heading: "Advertising", body: "The iOS and Android app shows an ad from Google AdMob (Google Ireland Limited) when a round starts. For this, Google processes your device's advertising ID (IDFA or Android advertising ID), device and usage data such as interactions with ads, and your approximate location based on your IP address to serve and measure ads and prevent fraud. Personalized ads are shown only with your consent through Google's consent dialog and, on iPhone, Apple's tracking prompt (Art. 6 (1) (a) GDPR, Section 25 (1) TDDDG). Without consent you only see non-personalized or limited ads. Google may transfer data to countries outside the EU, such as the USA. You can withdraw your consent at any time: in the app under Profile, Account, Ad privacy settings (shown where consent is required), on iPhone under Settings, Privacy & Security, Tracking, on Android in the device's ad settings. Google's privacy policy: https://policies.google.com/privacy" },
+      { heading: "What we do not do", body: "No analytics tools of our own, no selling of data. The app does not process payments." },
       { heading: "Who sees the data", body: "Members of your groups see your name and your game results. The data is stored on servers in the EU." },
       { heading: "Your rights", body: "You can delete your account at any time in the app under Profile, Account, Delete account. For information, correction or deletion, contact us at the email address above. You also have the right to lodge a complaint with a data protection supervisory authority." },
     ],
