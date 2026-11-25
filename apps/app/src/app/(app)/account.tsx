@@ -9,10 +9,8 @@ import { authClient } from "@/lib/auth";
 import { useLanguage } from "@/lib/language";
 import { useAdPrivacyOptions } from "@/lib/session-ad";
 
-type Purchase = { status: "idle" | "busy" | "pending" } | { status: "failed"; error: string };
-type Restore = { status: "idle" | "busy" | "found" | "none" } | { status: "failed"; error: string };
-
-const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
+type Purchase = "idle" | "busy" | "pending" | "failed";
+type Restore = "idle" | "busy" | "found" | "none" | "failed";
 
 /** Account details, the ad-free purchase and self-service deletion (required by App Store and Google Play). */
 export default function Account() {
@@ -25,9 +23,9 @@ export default function Account() {
   const [error, setError] = useState<string | null>(null);
   const adPrivacyOptions = useAdPrivacyOptions();
   const adFree = useAdFree();
-  const [purchase, setPurchase] = useState<Purchase>({ status: "idle" });
-  const [restore, setRestore] = useState<Restore>({ status: "idle" });
-  const [adPrivacyError, setAdPrivacyError] = useState<string | null>(null);
+  const [purchase, setPurchase] = useState<Purchase>("idle");
+  const [restore, setRestore] = useState<Restore>("idle");
+  const [adPrivacyError, setAdPrivacyError] = useState(false);
 
   async function remove() {
     setBusy(true);
@@ -38,41 +36,41 @@ export default function Account() {
   }
 
   async function buyAdFree() {
-    setPurchase({ status: "busy" });
+    setPurchase("busy");
     try {
       const result = await adFree.buy();
-      setPurchase({ status: result === "pending" ? "pending" : "idle" });
+      setPurchase(result === "pending" ? "pending" : "idle");
     } catch (e) {
-      setPurchase({ status: "failed", error: errorMessage(e) });
+      console.error("Ad-free purchase failed", e);
+      setPurchase("failed");
     }
   }
 
   async function openAdPrivacy(open: () => Promise<void>) {
-    setAdPrivacyError(null);
+    setAdPrivacyError(false);
     try {
       await open();
     } catch (e) {
-      setAdPrivacyError(errorMessage(e));
+      console.error("Ad privacy options failed", e);
+      setAdPrivacyError(true);
     }
   }
 
   async function restorePurchases() {
-    setRestore({ status: "busy" });
+    setRestore("busy");
     try {
-      setRestore({ status: (await adFree.restore()) ? "found" : "none" });
+      const result = await adFree.restore();
+      setRestore(result === "cancelled" ? "idle" : result);
     } catch (e) {
-      setRestore({ status: "failed", error: errorMessage(e) });
+      console.error("Restore failed", e);
+      setRestore("failed");
     }
   }
 
   const owned = adFree.entitlement.status === "owned";
-  // One notice at a time: the user's own purchase attempt first, then what failed while loading.
-  const adFreeError =
-    owned ? null
-    : purchase.status === "failed" ? purchase.error
-    : adFree.entitlement.status === "unknown" ? adFree.entitlement.error
-    : adFree.price.status === "failed" ? adFree.price.error
-    : null;
+  // Details are logged where they happen. Hidden while a purchase starts, so a retry visibly does something.
+  const storeFailed = !owned && purchase !== "busy"
+    && (purchase === "failed" || adFree.entitlement.status === "unknown" || adFree.price.status === "failed");
 
   return (
     <Screen>
@@ -85,7 +83,7 @@ export default function Account() {
       {adPrivacyOptions && !owned && (
         <>
           <Button title={t.account.adPrivacy} variant="ghost" onPress={() => void openAdPrivacy(adPrivacyOptions)} />
-          {adPrivacyError && <Notice>{t.account.adPrivacyError(adPrivacyError)}</Notice>}
+          {adPrivacyError && <Notice>{t.account.adPrivacyError}</Notice>}
         </>
       )}
       <Button title={t.account.support} variant="ghost" onPress={() => router.push("/support")} />
@@ -100,15 +98,15 @@ export default function Account() {
               subtitle={t.account.adFreeText}
               trailing={adFree.price.status === "ready" ? <T weight="600">{adFree.price.price}</T> : adFree.price.status === "loading" ? <Skeleton /> : null}
               onPress={() => void buyAdFree()}
-              loading={purchase.status === "busy"}
+              loading={purchase === "busy"}
             />
           )}
-          {purchase.status === "pending" && !owned && <T tone="muted" size={13}>{t.account.adFreePending}</T>}
-          {adFreeError && <Notice>{t.account.storeError(adFreeError)}</Notice>}
-          <Button title={t.account.restore} variant="ghost" onPress={() => void restorePurchases()} loading={restore.status === "busy"} />
-          {restore.status === "found" && <T tone="muted" size={13}>{t.account.restored}</T>}
-          {restore.status === "none" && <T tone="muted" size={13}>{t.account.nothingToRestore}</T>}
-          {restore.status === "failed" && <Notice>{t.account.storeError(restore.error)}</Notice>}
+          {purchase === "pending" && !owned && <T tone="muted" size={13}>{t.account.adFreePending}</T>}
+          {storeFailed && <Notice>{t.account.storeError}</Notice>}
+          <Button title={t.account.restore} variant="ghost" onPress={() => void restorePurchases()} loading={restore === "busy"} />
+          {restore === "found" && <T tone="muted" size={13}>{t.account.restored}</T>}
+          {restore === "none" && <T tone="muted" size={13}>{t.account.nothingToRestore}</T>}
+          {restore === "failed" && <Notice>{t.account.storeError}</Notice>}
         </>
       )}
 

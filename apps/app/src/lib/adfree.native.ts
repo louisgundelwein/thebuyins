@@ -53,7 +53,11 @@ function connect(): Promise<Store> {
 }
 
 /** The running buy() call, settled by the store's purchase events. */
-let waiting: { resolve: (result: web.BuyResult) => void; reject: (error: unknown) => void } | undefined;
+let waiting: {
+  promise: Promise<web.BuyResult>;
+  resolve: (result: web.BuyResult) => void;
+  reject: (error: unknown) => void;
+} | undefined;
 
 function settle(outcome: { result: web.BuyResult } | { error: unknown }) {
   const current = waiting;
@@ -94,14 +98,29 @@ async function onPurchase(store: Store, purchase: Purchase) {
   settle({ result: "purchased" });
 }
 
+const errorCode = (error: unknown) => (typeof error === "object" && error !== null && "code" in error ? error.code : undefined);
+
+/** Cancels and pending payments are normal purchase outcomes, not failures. */
+function expectedOutcome(store: Store, error: unknown): web.BuyResult | undefined {
+  if (store.isUserCancelledError(error)) return "cancelled";
+  const code = errorCode(error);
+  if (code === store.ErrorCode.Pending || code === store.ErrorCode.DeferredPayment) return "pending";
+  return undefined;
+}
+
+/**
+ * Settles the running purchase from a store error. iOS reports one error both as an event and
+ * as a rejected requestPurchase(), so the second copy finds nothing running; it is only logged
+ * when it is a real failure.
+ */
 async function onPurchaseError(store: Store, error: unknown) {
+  const outcome = expectedOutcome(store, error);
   if (!waiting) {
-    console.error("Ad-free: store error outside a purchase", error);
+    if (!outcome) console.error("Ad-free: store error outside a purchase", error);
     return;
   }
-  if (store.isUserCancelledError(error)) return settle({ result: "cancelled" });
-  const code = typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
-  if (code === store.ErrorCode.Pending || code === store.ErrorCode.DeferredPayment) return settle({ result: "pending" });
+  if (outcome) return settle({ result: outcome });
+  const code = errorCode(error);
   if (code === store.ErrorCode.AlreadyOwned) {
     // Happens when the launch query failed for an owner. Read ownership again instead of erroring.
     try {
@@ -173,20 +192,29 @@ function load(): Promise<void> {
   return loaded;
 }
 
+/** Starts a purchase. A second call while one runs (e.g. a double tap) joins the running one. */
 async function buy(): Promise<web.BuyResult> {
   const store = await connect();
   if (snapshot.price.status !== "ready") await loadPrice(store);
-  if (waiting) throw new Error("A purchase is already running");
-  const result = new Promise<web.BuyResult>((resolve, reject) => { waiting = { resolve, reject }; });
+  if (waiting) return waiting.promise;
+  let resolve!: (result: web.BuyResult) => void;
+  let reject!: (error: unknown) => void;
+  const promise = new Promise<web.BuyResult>((res, rej) => { resolve = res; reject = rej; });
+  waiting = { promise, resolve, reject };
   store.requestPurchase({ type: "in-app", request: { apple: { sku: SKU }, google: { skus: [SKU] } } })
     .catch((error: unknown) => onPurchaseError(store, error));
-  return result;
+  return promise;
 }
 
-async function restore(): Promise<boolean> {
+async function restore(): Promise<web.RestoreResult> {
   const store = await connect();
-  await store.restorePurchases();
-  return refresh(store);
+  try {
+    await store.restorePurchases();
+  } catch (error) {
+    if (store.isUserCancelledError(error)) return "cancelled";
+    throw error;
+  }
+  return (await refresh(store)) ? "found" : "none";
 }
 
 /** Ad-free state for the Account screen; starts loading on first use. */

@@ -18,13 +18,16 @@ export type PriceState =
 /** "pending" means the store still waits for payment (Ask to Buy, slow payment methods). */
 export type BuyResult = "purchased" | "pending" | "cancelled";
 
+/** "cancelled" means the user closed the store's sign-in. */
+export type RestoreResult = "found" | "none" | "cancelled";
+
 export type AdFree = {
   entitlement: AdFreeState;
   price: PriceState;
   /** Starts the store purchase. Throws store errors; a user cancel resolves "cancelled". */
   buy: () => Promise<BuyResult>;
-  /** Asks the store for earlier purchases. Resolves whether ad-free was found. */
-  restore: () => Promise<boolean>;
+  /** Asks the store for earlier purchases. Throws store errors. */
+  restore: () => Promise<RestoreResult>;
 };
 
 function noStore(): never {
