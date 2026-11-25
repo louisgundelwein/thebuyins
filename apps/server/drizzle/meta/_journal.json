@@ -15,6 +15,13 @@
       "when": 1791893837417,
       "tag": "0001_personal_deletion",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795640934354,
+      "tag": "0002_group_currency",
+      "breakpoints": true
     }
   ]
 }

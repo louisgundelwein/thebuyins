@@ -1,0 +1,2 @@
+CREATE TYPE "public"."group_currency" AS ENUM('EUR', 'USD', 'GBP', 'CAD', 'AUD', 'CHF', 'JPY', 'CNY', 'INR', 'MXN');--> statement-breakpoint
+ALTER TABLE "group" ADD COLUMN "currency" "group_currency" DEFAULT 'EUR' NOT NULL;

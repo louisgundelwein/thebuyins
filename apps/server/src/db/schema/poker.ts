@@ -1,8 +1,10 @@
+import { currencies } from "@thebuyins/core";
 import { index, integer, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 export const memberRole = pgEnum("member_role", ["admin", "member"]);
 export const gameStatus = pgEnum("game_status", ["live", "finished"]);
+export const groupCurrency = pgEnum("group_currency", currencies);
 
 /** A circle of friends that plays together, e.g. "Friday poker". */
 export const group = pgTable("group", {
@@ -10,6 +12,7 @@ export const group = pgTable("group", {
   name: text().notNull(),
   inviteCode: text().notNull().unique(),
   defaultBuyInCents: integer().notNull(),
+  currency: groupCurrency().notNull().default("EUR"),
   createdAt: timestamp().notNull().defaultNow(),
 });
 
