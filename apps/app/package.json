@@ -36,6 +36,8 @@
   "devDependencies": {
     "@thebuyins/server": "workspace:*",
     "@types/react": "~19.2.2",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.2",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -44,7 +46,7 @@
     "ios": "expo run:ios",
     "android": "expo run:android",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "eslint . --max-warnings 0"
   },
   "private": true
 }
