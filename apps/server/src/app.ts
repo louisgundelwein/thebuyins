@@ -22,7 +22,7 @@ const api = new Hono()
 export const app = new Hono()
   // One line per API request (method, path, status, duration) so 4xx responses show up in the server log too.
   .use("/api/*", logger())
-  .use("/api/*", cors({ origin: webOrigins, credentials: true, allowHeaders: ["Content-Type", "X-Buyins-Currency"] }))
+  .use("/api/*", cors({ origin: webOrigins, credentials: true }))
   .on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw))
   .get("/api/health", async (c) => {
     try {
