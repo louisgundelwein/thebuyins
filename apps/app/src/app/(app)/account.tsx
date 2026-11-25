@@ -27,6 +27,7 @@ export default function Account() {
   const adFree = useAdFree();
   const [purchase, setPurchase] = useState<Purchase>({ status: "idle" });
   const [restore, setRestore] = useState<Restore>({ status: "idle" });
+  const [adPrivacyError, setAdPrivacyError] = useState<string | null>(null);
 
   async function remove() {
     setBusy(true);
@@ -43,6 +44,15 @@ export default function Account() {
       setPurchase({ status: result === "pending" ? "pending" : "idle" });
     } catch (e) {
       setPurchase({ status: "failed", error: errorMessage(e) });
+    }
+  }
+
+  async function openAdPrivacy(open: () => Promise<void>) {
+    setAdPrivacyError(null);
+    try {
+      await open();
+    } catch (e) {
+      setAdPrivacyError(errorMessage(e));
     }
   }
 
@@ -72,7 +82,12 @@ export default function Account() {
         <T tone="muted" size={13}>{session?.user.email}</T>
       </Row>
       <Button title={t.account.privacy} variant="ghost" onPress={() => router.push("/privacy")} />
-      {adPrivacyOptions && !owned && <Button title={t.account.adPrivacy} variant="ghost" onPress={() => void adPrivacyOptions()} />}
+      {adPrivacyOptions && !owned && (
+        <>
+          <Button title={t.account.adPrivacy} variant="ghost" onPress={() => void openAdPrivacy(adPrivacyOptions)} />
+          {adPrivacyError && <Notice>{t.account.adPrivacyError(adPrivacyError)}</Notice>}
+        </>
+      )}
       <Button title={t.account.support} variant="ghost" onPress={() => router.push("/support")} />
 
       {adFree.entitlement.status !== "unavailable" && (

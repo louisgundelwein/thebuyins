@@ -21,6 +21,8 @@ Does the app collect data? Yes.
 | Diagnostics > Crash Data (AdMob) | Yes | No | No | Analytics |
 | Financial Info, Precise Location, Contacts | No | | | |
 
+Precise location stays "No": the app never asks for location permission, so neither Google nor its ad partners (listed in the consent dialog) can read GPS. The consent dialog still offers the precise-geolocation purpose because it is Google's standard partner text.
+
 - Financial Info: No. The app stores plain numbers typed by users and handles no payments or card data. The "Werbefrei" in-app purchase runs through Apple and Google; the app keeps no purchase data on its server.
 - Tracking: Yes. The advertising identifier is used for personalized ads after Apple's tracking prompt (ATT).
 - Privacy policy URL: `<origin>/privacy`

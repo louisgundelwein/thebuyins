@@ -66,15 +66,12 @@ export function useAdPrivacyOptions(): (() => Promise<void>) | undefined {
     return () => { cancelled = true; };
   }, []);
   if (!required) return undefined;
+  // Throws when the form cannot open (e.g. offline) so the caller can tell the user.
   return async () => {
-    try {
-      const { AdsConsent } = await import("react-native-google-mobile-ads");
-      await AdsConsent.showPrivacyOptionsForm();
-      // The choice may have changed; the next round start gathers consent again.
-      consent = undefined;
-    } catch (error) {
-      console.warn("Ad privacy options failed", error);
-    }
+    const { AdsConsent } = await import("react-native-google-mobile-ads");
+    await AdsConsent.showPrivacyOptionsForm();
+    // The choice may have changed; the next round start gathers consent again.
+    consent = undefined;
   };
 }
 
@@ -101,7 +98,11 @@ export function useSessionAd() {
           slot.show().catch(error => { cleanup(); reject(error); });
         });
       });
-      slot.addAdEventListener(AdEventType.ERROR, () => { present.current = undefined; });
+      slot.addAdEventListener(AdEventType.ERROR, (error) => {
+        // The round still starts without an ad; the log says why none was shown.
+        console.warn("Session ad failed to load", error);
+        present.current = undefined;
+      });
       slot.load();
     }
 
