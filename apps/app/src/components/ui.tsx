@@ -174,6 +174,53 @@ export function Button({ title, onPress, variant = "primary", disabled, loading,
   );
 }
 
+/**
+ * Quiet row in the ghost button style with a muted subline and trailing content, e.g. a price.
+ * Without `onPress` it is a plain status row.
+ */
+export function ActionRow({ title, subtitle, icon, trailing, onPress, loading }: {
+  title: string;
+  subtitle?: string;
+  icon?: ReactNode;
+  trailing?: ReactNode;
+  onPress?: () => void;
+  loading?: boolean;
+}) {
+  const { t } = useLanguage();
+  const { c } = useTheme();
+  const content = (
+    <>
+      {icon}
+      <View style={s.fill}>
+        <Text maxFontSizeMultiplier={1.6} style={{ color: c.text, fontWeight: "700", fontSize: 15 }}>{title}</Text>
+        {subtitle ? <T tone="muted" size={13}>{subtitle}</T> : null}
+      </View>
+      {loading ? <ActivityIndicator color={c.text} accessibilityLabel={t.common.loading} /> : trailing}
+    </>
+  );
+  if (!onPress) return <View accessible style={[s.actionRow, { backgroundColor: c.faint }]}>{content}</View>;
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={loading}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: loading, busy: loading }}
+      aria-disabled={loading}
+      aria-busy={loading}
+      style={({ pressed }) => [s.actionRow, { backgroundColor: c.faint, opacity: pressed ? 0.8 : 1 }]}
+    >
+      {content}
+    </Pressable>
+  );
+}
+
+/** Placeholder bar for a short value that is still loading, e.g. a price. */
+export function Skeleton() {
+  const { t } = useLanguage();
+  const { c } = useTheme();
+  return <View accessibilityLabel={t.common.loading} style={[s.skeleton, { backgroundColor: c.border }]} />;
+}
+
 /** Small inline action, e.g. the "+20" rebuy chip. `label` overrides the spoken title when it's cryptic. */
 export function Chip({ title, label, onPress, active }: { title: string; label?: string; onPress?: () => void; active?: boolean }) {
   const { c } = useTheme();
@@ -258,6 +305,8 @@ const s = StyleSheet.create({
   badge: { position: "absolute", right: -2, bottom: -2, width: 13, height: 13, borderRadius: 7, borderWidth: 2 },
   button: { height: 50, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12 },
+  actionRow: { minHeight: 50, borderRadius: 16, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10 },
+  skeleton: { width: 44, height: 14, borderRadius: 7 },
   field: { height: 48, borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, fontSize: 16 },
   heading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
   notice: { borderRadius: 16, padding: 12 },

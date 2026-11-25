@@ -27,6 +27,19 @@ pnpm --filter @thebuyins/app android        # nativer Build + Installation
 adb reverse tcp:3000 tcp:3000              # API im Emulator unter localhost
 ```
 
-### Session-start test ads
+### Ads
 
-Set `BUYINS_TEST_ADS=1` during native prebuild, build, and when starting Metro for that build. Rebuild the native app after changing this setting. The final Start button after the seat draw can show one preloaded Google sample ad. If consent is missing or the ad is unavailable, the usual start request proceeds immediately. Expo Go and web skip ads.
+Native builds show one Google AdMob interstitial when the host taps Start after the seat draw. If ads may not be requested or none is loaded, the round starts immediately. Expo Go and web skip ads.
+
+- Consent: signed-in users get Google's consent dialog (and Apple's tracking prompt, if the IDFA message is published in AdMob, Privacy & messaging) at app start. Account shows "Ad privacy settings" where Google requires it.
+- IDs: the AdMob app and interstitial unit IDs are constants at the top of `apps/app/app.config.js`. `__DEV__` bundles always use Google's test ad units.
+- `https://thebuyins.com/app-ads.txt` is served by `apps/server/src/well-known.ts`.
+
+### Ad-free
+
+One-time purchase `com.thebuyins.app.adfree` (non-consumable, same id in App Store Connect and Play Console), bought or restored under Account. Code: `apps/app/src/lib/adfree.native.ts` (expo-iap).
+
+- Ownership is read from the store's existing purchases at app start and when the app returns to the foreground. No server. Once owned, it stays owned for that launch.
+- Owners get no ad, no consent dialog and no tracking prompt; the app never initializes the ads SDK or requests an ad.
+- If the store cannot be read, ownership is unknown and no ad is shown that launch (a paying user must never see one). The error is logged and shown under Account.
+- Web and Expo Go hide the purchase.

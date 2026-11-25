@@ -20,7 +20,7 @@ Abrechnung für deine private Pokerrunde: Buy-ins, Cash-outs, wer zahlt wen.
 ## Description (App Store and Google Play full description, 2205/4000)
 The Buy-Ins ist ein Zählblock für private Spielrunden unter Freunden. Die App hält fest, wer eingekauft, wer nachgekauft und wer ausgezahlt hat, und zeigt dir am Ende des Abends, wer wem etwas schuldet.
 
-Die App führt nur Buch. Sie bewegt kein Geld, bietet keine Wetten oder Glücksspiele an, hat keine Quoten, keine Zahlungslinks und keine In-App-Käufe. Abgerechnet wird unter den Mitspielern, bar oder wie ihr wollt. Stell dir einen Notizblock vor, der für dich rechnet.
+Die App führt nur Buch. Sie bewegt kein Geld, bietet keine Wetten oder Glücksspiele an, hat keine Quoten und keine Zahlungslinks. Der einzige Kauf ist optional: einmalig „Werbefrei“, das die Werbung beim Spielstart entfernt. Abgerechnet wird unter den Mitspielern, bar oder wie ihr wollt. Stell dir einen Notizblock vor, der für dich rechnet.
 
 SO LÄUFT EIN SPIEL
 - Lege eine Gruppe für deine feste Runde an und setze einen Standard-Buy-in in Euro.

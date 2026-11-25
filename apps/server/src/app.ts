@@ -34,7 +34,7 @@ export const app = new Hono()
     }
   })
   .route("/api", api)
-  // Universal Links / App Links verification. Mounted here so it precedes the SPA fallback in index.ts.
+  // Universal Links / App Links verification and app-ads.txt. Mounted here so they precede the SPA fallback in index.ts.
   .route("/", wellKnownRoutes)
   .onError((err, c) => {
     if (err instanceof HTTPException) return c.json({ error: err.message }, err.status);
