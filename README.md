@@ -39,7 +39,7 @@ Native builds show one Google AdMob interstitial when the host taps Start after 
 
 One-time purchase `com.thebuyins.app.adfree` (non-consumable, same id in App Store Connect and Play Console), bought or restored under Account. Code: `apps/app/src/lib/adfree.native.ts` (expo-iap).
 
-- Ownership is read from the store's existing purchases at app start. No server.
-- Owners get no ad, no consent dialog, no tracking prompt, and the ads SDK never starts.
+- Ownership is read from the store's existing purchases at app start and when the app returns to the foreground. No server. Once owned, it stays owned for that launch.
+- Owners get no ad, no consent dialog and no tracking prompt; the app never initializes the ads SDK or requests an ad.
 - If the store cannot be read, ownership is unknown and no ad is shown that launch (a paying user must never see one). The error is logged and shown under Account.
 - Web and Expo Go hide the purchase.

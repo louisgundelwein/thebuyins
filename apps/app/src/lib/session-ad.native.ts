@@ -12,11 +12,12 @@ let consent: Promise<AdsConsentInfo | undefined> | undefined;
 /**
  * Asks once per launch for ad consent (Google's GDPR form, then Apple's tracking prompt when configured
  * in AdMob) and starts the SDK if ads may be requested. Shared by app start, the round start and settings.
- * Resolves undefined without asking or starting the SDK when ads are off (ad-free owned or unknown).
+ * Resolves undefined without loading, asking or starting anything while ads are off (ad-free owned or
+ * unknown), including after a purchase later in the launch.
  */
-function gatherAdConsent(): Promise<AdsConsentInfo | undefined> {
+async function gatherAdConsent(): Promise<AdsConsentInfo | undefined> {
+  if (!(await adsAllowed())) return undefined;
   consent ??= (async () => {
-    if (!(await adsAllowed())) return undefined;
     const { default: mobileAds, AdsConsent, MaxAdContentRating } = await import("react-native-google-mobile-ads");
     // iOS ignores the tracking prompt while the app is not yet active.
     await untilActive();
@@ -59,8 +60,9 @@ export function useAdPrivacyOptions(): (() => Promise<void>) | undefined {
     if (!adsAvailable) return;
     let cancelled = false;
     void (async () => {
-      const { AdsConsentPrivacyOptionsRequirementStatus } = await import("react-native-google-mobile-ads");
       const info = await gatherAdConsent();
+      if (!info) return;
+      const { AdsConsentPrivacyOptionsRequirementStatus } = await import("react-native-google-mobile-ads");
       if (!cancelled) setRequired(info?.privacyOptionsRequirementStatus === AdsConsentPrivacyOptionsRequirementStatus.REQUIRED);
     })().catch((error: unknown) => console.warn("Ad privacy options unavailable", error));
     return () => { cancelled = true; };
@@ -85,9 +87,9 @@ export function useSessionAd() {
     let ad: InterstitialAd | undefined;
 
     async function prepare() {
-      const { AdEventType, InterstitialAd, TestIds } = await import("react-native-google-mobile-ads");
       const info = await gatherAdConsent();
       if (cancelled || !info?.canRequestAds) return;
+      const { AdEventType, InterstitialAd, TestIds } = await import("react-native-google-mobile-ads");
       const slot = InterstitialAd.createForAdRequest(__DEV__ ? TestIds.INTERSTITIAL : adUnitId());
       ad = slot;
       slot.addAdEventListener(AdEventType.LOADED, () => {

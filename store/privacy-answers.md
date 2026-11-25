@@ -1,6 +1,6 @@
 # Privacy and rating answers
 
-Server: own API and Postgres database. Since 1.0.2 the iOS and Android apps show Google AdMob ads (Google Mobile Ads SDK with Google UMP consent). No other third-party SDKs. Data is sent over HTTPS only.
+Server: own API and Postgres database. Since 1.0.2 the iOS and Android apps show Google AdMob ads (Google Mobile Ads SDK with Google UMP consent) and sell ad-free through Apple/Google in-app purchase (expo-iap, talks only to the store; no data to us). No other third-party SDKs. Data is sent over HTTPS only.
 
 Ad rows below follow Google's SDK privacy manifest (checked in GoogleMobileAds 13.13.0; the app ships 13.10.0) and Google's Play data disclosure page.
 

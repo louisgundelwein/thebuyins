@@ -1,6 +1,6 @@
 import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useEffect, useSyncExternalStore } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import type { Purchase } from "expo-iap";
 // Type-only: tsc resolves "./adfree" to the web file, whose types this module must match.
 import type * as web from "./adfree";
@@ -20,7 +20,9 @@ let snapshot: Snapshot = {
 };
 const listeners = new Set<() => void>();
 
+/** Within one launch, "owned" is final: a slower, older store read must not undo a purchase. */
 function update(patch: Partial<Snapshot>) {
+  if (patch.entitlement && snapshot.entitlement.status === "owned") delete patch.entitlement;
   snapshot = { ...snapshot, ...patch };
   listeners.forEach((listener) => listener());
 }
@@ -41,9 +43,10 @@ let connection: Promise<Store> | undefined;
 function connect(): Promise<Store> {
   connection ??= (async () => {
     const store = await import("expo-iap");
-    await store.initConnection();
+    // Listeners first: the store can deliver events as soon as it connects.
     store.purchaseUpdatedListener((purchase) => void onPurchase(store, purchase));
     store.purchaseErrorListener((error) => void onPurchaseError(store, error));
+    await store.initConnection();
     return store;
   })().catch((error: unknown) => {
     connection = undefined;
@@ -93,8 +96,9 @@ async function onPurchase(store: Store, purchase: Purchase) {
     settle({ error: new Error(`Purchase state: ${purchase.purchaseState}`) });
     return;
   }
-  await finish(store, purchase);
+  // Paid: ad-free turns on before the store confirmation, so no ad can slip in meanwhile.
   update({ entitlement: { status: "owned" } });
+  await finish(store, purchase);
   settle({ result: "purchased" });
 }
 
@@ -135,10 +139,17 @@ async function onPurchaseError(store: Store, error: unknown) {
 
 /**
  * Reads ownership from the store's existing purchases, then finishes any that are still open.
- * A failure while finishing is logged and does not hide ownership; the next launch retries.
+ * A failed read sets ownership to unknown (no ads) and throws. A failure while finishing is
+ * logged and does not hide ownership; the next refresh retries.
  */
 async function refresh(store: Store): Promise<boolean> {
-  const purchases = (await store.getAvailablePurchases()).filter(isAdFree);
+  let purchases: Purchase[];
+  try {
+    purchases = (await store.getAvailablePurchases()).filter(isAdFree);
+  } catch (error) {
+    update({ entitlement: { status: "unknown", error: message(error) } });
+    throw error;
+  }
   const owned = purchases.length > 0;
   update({ entitlement: { status: owned ? "owned" : "not-owned" } });
   try {
@@ -184,9 +195,12 @@ function load(): Promise<void> {
       console.error("Ad-free: price unavailable", error);
       update({ price: { status: "failed", error: message(error) } });
     });
-    await refresh(store).catch((error: unknown) => {
-      console.error("Ad-free: ownership unknown, ads stay off", error);
-      update({ entitlement: { status: "unknown", error: message(error) } });
+    await refresh(store).catch((error: unknown) => console.error("Ad-free: ownership unknown, ads stay off", error));
+    // Payments that complete while the app is in the background, or purchases from another
+    // device, are picked up when the app comes back.
+    AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      refresh(store).catch((error: unknown) => console.error("Ad-free: ownership unknown, ads stay off", error));
     });
   })();
   return loaded;
@@ -201,8 +215,10 @@ async function buy(): Promise<web.BuyResult> {
   let reject!: (error: unknown) => void;
   const promise = new Promise<web.BuyResult>((res, rej) => { resolve = res; reject = rej; });
   waiting = { promise, resolve, reject };
+  // The store reports each error both as an event and as this rejection. Whichever comes second
+  // finds nothing running; only the event path logs it.
   store.requestPurchase({ type: "in-app", request: { apple: { sku: SKU }, google: { skus: [SKU] } } })
-    .catch((error: unknown) => onPurchaseError(store, error));
+    .catch((error: unknown) => { if (waiting?.promise === promise) void onPurchaseError(store, error); });
   return promise;
 }
 
