@@ -95,7 +95,10 @@ async function onPurchase(store: Store, purchase: Purchase) {
 }
 
 async function onPurchaseError(store: Store, error: unknown) {
-  if (!waiting) return;
+  if (!waiting) {
+    console.error("Ad-free: store error outside a purchase", error);
+    return;
+  }
   if (store.isUserCancelledError(error)) return settle({ result: "cancelled" });
   const code = typeof error === "object" && error !== null && "code" in error ? error.code : undefined;
   if (code === store.ErrorCode.Pending || code === store.ErrorCode.DeferredPayment) return settle({ result: "pending" });
@@ -111,15 +114,22 @@ async function onPurchaseError(store: Store, error: unknown) {
   settle({ error });
 }
 
-/** Reads ownership from the store's existing purchases and finishes any that are still open. */
+/**
+ * Reads ownership from the store's existing purchases, then finishes any that are still open.
+ * A failure while finishing is logged and does not hide ownership; the next launch retries.
+ */
 async function refresh(store: Store): Promise<boolean> {
   const purchases = (await store.getAvailablePurchases()).filter(isAdFree);
-  const open = Platform.OS === "ios"
-    ? (await store.getPendingTransactionsIOS()).filter(isAdFree)
-    : purchases.filter((purchase) => !("isAcknowledgedAndroid" in purchase && purchase.isAcknowledgedAndroid));
-  await Promise.all(open.map((purchase) => finish(store, purchase)));
   const owned = purchases.length > 0;
   update({ entitlement: { status: owned ? "owned" : "not-owned" } });
+  try {
+    const open = Platform.OS === "ios"
+      ? (await store.getPendingTransactionsIOS()).filter(isAdFree)
+      : purchases.filter((purchase) => !("isAcknowledgedAndroid" in purchase && purchase.isAcknowledgedAndroid));
+    await Promise.all(open.map((purchase) => finish(store, purchase)));
+  } catch (error) {
+    console.error("Ad-free: open purchases not checked, retrying next launch", error);
+  }
   return owned;
 }
 
@@ -135,7 +145,7 @@ async function loadPrice(store: Store): Promise<string> {
 let loaded: Promise<void> | undefined;
 
 /**
- * Loads ownership and price once per launch. Owner rule (assumption approved by the owner): when
+ * Loads ownership (and starts loading the price) once per launch. Owner rule (assumption approved by the owner): when
  * ownership cannot be read we do not know, so no ad is shown, because a paying user must never
  * see one. The error is logged and shown on Account; non-owners just get no ad that time.
  */
@@ -150,7 +160,8 @@ function load(): Promise<void> {
       update({ entitlement: { status: "unknown", error: message(error) }, price: { status: "failed", error: message(error) } });
       return;
     }
-    const price = loadPrice(store).catch((error: unknown) => {
+    // The price loads in the background so the ads decision does not wait for it.
+    void loadPrice(store).catch((error: unknown) => {
       console.error("Ad-free: price unavailable", error);
       update({ price: { status: "failed", error: message(error) } });
     });
@@ -158,7 +169,6 @@ function load(): Promise<void> {
       console.error("Ad-free: ownership unknown, ads stay off", error);
       update({ entitlement: { status: "unknown", error: message(error) } });
     });
-    await price;
   })();
   return loaded;
 }
