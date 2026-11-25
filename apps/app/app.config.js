@@ -17,7 +17,7 @@ const SK_AD_NETWORK_ITEMS = [
 ].map((id) => `${id}.skadnetwork`);
 
 /**
- * Adds Google Mobile Ads to native builds. The app reads the interstitial unit IDs from `extra`
+ * Adds Google Mobile Ads and in-app purchases (expo-iap, Google Play on Android) to native builds. The app reads the interstitial unit IDs from `extra`
  * and uses Google's test units in __DEV__.
  */
 module.exports = ({ config }) => {
@@ -34,6 +34,6 @@ module.exports = ({ config }) => {
       userTrackingUsageDescription:
         "Your choice decides whether the ads shown before a round can be tailored to you. The app works the same either way.",
       skAdNetworkItems: SK_AD_NETWORK_ITEMS,
-    }]],
+    }], ["expo-iap", { android: { store: "play" } }]],
   };
 };

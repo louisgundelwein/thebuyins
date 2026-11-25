@@ -2,18 +2,21 @@ import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useEffect, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
 import type { AdsConsentInfo, InterstitialAd } from "react-native-google-mobile-ads";
+import { adsAllowed } from "./adfree";
 
 // Expo Go has no Google Mobile Ads SDK; it skips ads entirely.
 const adsAvailable = Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
 
-let consent: Promise<AdsConsentInfo> | undefined;
+let consent: Promise<AdsConsentInfo | undefined> | undefined;
 
 /**
  * Asks once per launch for ad consent (Google's GDPR form, then Apple's tracking prompt when configured
  * in AdMob) and starts the SDK if ads may be requested. Shared by app start, the round start and settings.
+ * Resolves undefined without asking or starting the SDK when ads are off (ad-free owned or unknown).
  */
-function gatherAdConsent(): Promise<AdsConsentInfo> {
+function gatherAdConsent(): Promise<AdsConsentInfo | undefined> {
   consent ??= (async () => {
+    if (!(await adsAllowed())) return undefined;
     const { default: mobileAds, AdsConsent, MaxAdContentRating } = await import("react-native-google-mobile-ads");
     // iOS ignores the tracking prompt while the app is not yet active.
     await untilActive();
@@ -58,7 +61,7 @@ export function useAdPrivacyOptions(): (() => Promise<void>) | undefined {
     void (async () => {
       const { AdsConsentPrivacyOptionsRequirementStatus } = await import("react-native-google-mobile-ads");
       const info = await gatherAdConsent();
-      if (!cancelled) setRequired(info.privacyOptionsRequirementStatus === AdsConsentPrivacyOptionsRequirementStatus.REQUIRED);
+      if (!cancelled) setRequired(info?.privacyOptionsRequirementStatus === AdsConsentPrivacyOptionsRequirementStatus.REQUIRED);
     })().catch((error: unknown) => console.warn("Ad privacy options unavailable", error));
     return () => { cancelled = true; };
   }, []);
@@ -87,7 +90,7 @@ export function useSessionAd() {
     async function prepare() {
       const { AdEventType, InterstitialAd, TestIds } = await import("react-native-google-mobile-ads");
       const info = await gatherAdConsent();
-      if (cancelled || !info.canRequestAds) return;
+      if (cancelled || !info?.canRequestAds) return;
       const slot = InterstitialAd.createForAdRequest(__DEV__ ? TestIds.INTERSTITIAL : adUnitId());
       ad = slot;
       slot.addAdEventListener(AdEventType.LOADED, () => {
@@ -113,8 +116,10 @@ export function useSessionAd() {
   return async () => {
     const show = present.current;
     present.current = undefined;
-    if (AppState.currentState !== "active") return;
-    try { await show?.(); }
+    if (!show || AppState.currentState !== "active") return;
+    // Ad-free may have been bought after the ad was prepared. Ownership is already loaded once an ad exists.
+    if (!(await adsAllowed())) return;
+    try { await show(); }
     catch (error) { console.warn("Session ad presentation failed", error); }
   };
 }

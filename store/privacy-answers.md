@@ -21,7 +21,7 @@ Does the app collect data? Yes.
 | Diagnostics > Crash Data (AdMob) | Yes | No | No | Analytics |
 | Financial Info, Precise Location, Contacts | No | | | |
 
-- Financial Info: No. The app stores plain numbers typed by users and handles no payments or card data.
+- Financial Info: No. The app stores plain numbers typed by users and handles no payments or card data. The "Werbefrei" in-app purchase runs through Apple and Google; the app keeps no purchase data on its server.
 - Tracking: Yes. The advertising identifier is used for personalized ads after Apple's tracking prompt (ATT).
 - Privacy policy URL: `<origin>/privacy`
 - Support URL: `<origin>/support`
@@ -54,6 +54,6 @@ Does the app collect data? Yes.
 - Category: Utility, Productivity, Communication or Other (not Game).
 - Gambling: the app has no real-money gambling. Simulated gambling: No. Poker is only the theme of the records kept.
 - Users can interact or exchange content: only invited group members see names and game records.
-- Shares location: No. Digital purchases: No.
+- Shares location: No. Digital purchases: Yes (one-time "Werbefrei" in-app purchase).
 - Target audience: 18+ only. Not designed for children. Not in Families program.
 - Declarations: Contains ads: Yes. Advertising ID: Yes, used for Advertising or marketing, Analytics and Fraud prevention. Is a gambling app (Play gambling declaration): No, because it offers no gambling and does not facilitate real-money play.

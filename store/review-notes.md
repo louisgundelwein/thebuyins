@@ -4,7 +4,7 @@
 The Buy-Ins is a ledger and scorekeeper for private home poker games among friends. Users record who bought in, who rebought and who cashed out, and the app calculates the result per player and a short list of who pays whom.
 
 ## Guideline 5.3 (gambling) positioning
-- The app moves no money. There are no payments, no payment links, no wallet, no in-app purchases.
+- The app moves no money between players. There are no payment links and no wallet. The only purchase is the optional one-time in-app purchase "Werbefrei" (Ad-free), which removes the ad at round start.
 - There is no betting, no wagering, no odds, no cards, no dealing and no gameplay of any kind. Poker is played offline at a real table. The app is not a game.
 - Nothing can be won or lost inside the app. Amounts are plain numbers typed in by users, like entries in a notebook.
 - The "who pays whom" screen is a calculation only. Players settle among themselves outside the app.
@@ -53,3 +53,4 @@ Account deletion is in the app: tap the avatar at the top right, then "Account",
 ## Other
 - Sign-in is email and password only. No third-party login.
 - Ads: Google AdMob. At app start, Google's consent dialog and Apple's tracking prompt appear (where required). When the host taps Start after the seat draw, one interstitial ad is shown before the round begins. No third-party analytics.
+- In-app purchase "Werbefrei" (`com.thebuyins.app.adfree`, non-consumable): tap the avatar at the top right, then "Account". The row "Werbefrei" shows the price and starts the purchase; "Käufe wiederherstellen" (Restore purchases) is right below. After the purchase, the row shows "Werbefrei aktiv" and no ad, consent dialog or tracking prompt appears.

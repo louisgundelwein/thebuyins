@@ -34,3 +34,12 @@ Native builds show one Google AdMob interstitial when the host taps Start after 
 - Consent: signed-in users get Google's consent dialog (and Apple's tracking prompt, if the IDFA message is published in AdMob, Privacy & messaging) at app start. Account shows "Ad privacy settings" where Google requires it.
 - IDs: the AdMob app and interstitial unit IDs are constants at the top of `apps/app/app.config.js`. `__DEV__` bundles always use Google's test ad units.
 - `https://thebuyins.com/app-ads.txt` is served by `apps/server/src/well-known.ts`.
+
+### Ad-free
+
+One-time purchase `com.thebuyins.app.adfree` (non-consumable, same id in App Store Connect and Play Console), bought or restored under Account. Code: `apps/app/src/lib/adfree.native.ts` (expo-iap).
+
+- Ownership is read from the store's existing purchases at app start. No server.
+- Owners get no ad, no consent dialog, no tracking prompt, and the ads SDK never starts.
+- If the store cannot be read, ownership is unknown and no ad is shown that launch (a paying user must never see one). The error is logged and shown under Account.
+- Web and Expo Go hide the purchase.

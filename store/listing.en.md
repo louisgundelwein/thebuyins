@@ -20,7 +20,7 @@ Ledger for your private home game: buy-ins, cash-outs, who pays whom.
 ## Description (App Store and Google Play full description, 2014/4000)
 The Buy-Ins is a ledger for private home games among friends. It keeps track of who bought in, who rebought and who cashed out, and tells you at the end of the night who owes whom.
 
-The app only keeps records. It does not move money, it does not offer betting or gambling of any kind, there are no odds, no payment links and no in-app purchases. Players settle up among themselves, in cash or however they like. Think of it as a notepad that does the maths.
+The app only keeps records. It does not move money, it does not offer betting or gambling of any kind, there are no odds and no payment links. The only purchase is optional: a one-time "Ad-free" that removes the ad at round start. Players settle up among themselves, in cash or however they like. Think of it as a notepad that does the maths.
 
 HOW A GAME WORKS
 - Create a group for your regular round and set a default buy-in in euros.
