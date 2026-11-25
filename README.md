@@ -32,5 +32,5 @@ adb reverse tcp:3000 tcp:3000              # API im Emulator unter localhost
 Native builds show one Google AdMob interstitial when the host taps Start after the seat draw. If ads may not be requested or none is loaded, the round starts immediately. Expo Go and web skip ads.
 
 - Consent: signed-in users get Google's consent dialog (and Apple's tracking prompt, if the IDFA message is published in AdMob, Privacy & messaging) at app start. Account shows "Ad privacy settings" where Google requires it.
-- IDs: the AdMob app and interstitial unit IDs are constants at the top of `apps/app/app.config.js`. The release scripts set `BUYINS_RELEASE=1`, which writes the real IDs and fails while a `*_TODO` placeholder is left. Other builds use Google's sample app IDs, and `__DEV__` bundles always use test ad units.
+- IDs: the AdMob app and interstitial unit IDs are constants at the top of `apps/app/app.config.js`. `__DEV__` bundles always use Google's test ad units.
 - `https://thebuyins.com/app-ads.txt` is served by `apps/server/src/well-known.ts`.

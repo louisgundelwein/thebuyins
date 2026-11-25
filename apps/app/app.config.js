@@ -1,12 +1,8 @@
-// Real AdMob IDs. Replace every *_TODO before a release build; release builds throw while one is left.
-const ADMOB_IOS_APP_ID = "ADMOB_IOS_APP_ID_TODO";
-const ADMOB_ANDROID_APP_ID = "ADMOB_ANDROID_APP_ID_TODO";
-const ADMOB_IOS_INTERSTITIAL_ID = "ADMOB_IOS_INTERSTITIAL_ID_TODO";
-const ADMOB_ANDROID_INTERSTITIAL_ID = "ADMOB_ANDROID_INTERSTITIAL_ID_TODO";
-
-// Google's sample app IDs. Development builds use them with test ad units only.
-const SAMPLE_IOS_APP_ID = "ca-app-pub-3940256099942544~1458002511";
-const SAMPLE_ANDROID_APP_ID = "ca-app-pub-3940256099942544~3347511713";
+// AdMob IDs for The Buy-Ins (publisher pub-6105108199502947). Development builds use Google's test ad units.
+const ADMOB_IOS_APP_ID = "ca-app-pub-6105108199502947~9647740282";
+const ADMOB_ANDROID_APP_ID = "ca-app-pub-6105108199502947~4136840411";
+const ADMOB_IOS_INTERSTITIAL_ID = "ca-app-pub-6105108199502947/6790923916";
+const ADMOB_ANDROID_INTERSTITIAL_ID = "ca-app-pub-6105108199502947/9225515563";
 
 // Ad networks Google lists for AdMob in the iOS quick start (developers.google.com/admob/ios/quick-start).
 const SK_AD_NETWORK_ITEMS = [
@@ -21,17 +17,10 @@ const SK_AD_NETWORK_ITEMS = [
 ].map((id) => `${id}.skadnetwork`);
 
 /**
- * Adds Google Mobile Ads to native builds. The release scripts set BUYINS_RELEASE=1 for prebuild,
- * which writes the real app IDs and refuses placeholders. Other builds get Google's sample app IDs.
- * The app reads the interstitial unit IDs from `extra` and uses test units in __DEV__.
+ * Adds Google Mobile Ads to native builds. The app reads the interstitial unit IDs from `extra`
+ * and uses Google's test units in __DEV__.
  */
 module.exports = ({ config }) => {
-  const release = process.env.BUYINS_RELEASE === "1";
-  if (release) {
-    const ids = { ADMOB_IOS_APP_ID, ADMOB_ANDROID_APP_ID, ADMOB_IOS_INTERSTITIAL_ID, ADMOB_ANDROID_INTERSTITIAL_ID };
-    const missing = Object.keys(ids).filter((name) => ids[name].endsWith("_TODO"));
-    if (missing.length) throw new Error(`Set the AdMob IDs in app.config.js before a release build: ${missing.join(", ")}`);
-  }
   return {
     ...config,
     extra: {
@@ -39,8 +28,8 @@ module.exports = ({ config }) => {
       adUnits: { ios: ADMOB_IOS_INTERSTITIAL_ID, android: ADMOB_ANDROID_INTERSTITIAL_ID },
     },
     plugins: [...config.plugins, ["react-native-google-mobile-ads", {
-      iosAppId: release ? ADMOB_IOS_APP_ID : SAMPLE_IOS_APP_ID,
-      androidAppId: release ? ADMOB_ANDROID_APP_ID : SAMPLE_ANDROID_APP_ID,
+      iosAppId: ADMOB_IOS_APP_ID,
+      androidAppId: ADMOB_ANDROID_APP_ID,
       delayAppMeasurementInit: true,
       userTrackingUsageDescription:
         "Your choice decides whether the ads shown before a round can be tailored to you. The app works the same either way.",
